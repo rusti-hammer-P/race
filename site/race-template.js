@@ -426,6 +426,14 @@
       updateCockpit(dObj, order, lotForCockpit);
     }
 
+    // リセット時のスケール初期化関数
+    const resetScale = () => {
+      currentMaxDomain = initialBaseline * 1.3;
+      targetMaxDomain = currentMaxDomain;
+      window._baselinePixelRatio = undefined;
+    };
+    update.resetScale = resetScale;
+
     update();
     return update;
   }
@@ -677,6 +685,7 @@
 
   function reset() {
     pause();
+    if (chart.resetScale) chart.resetScale();
     currentIndex = 0;
     chart();
   }
