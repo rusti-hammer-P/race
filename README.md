@@ -21,17 +21,3 @@
 | VTI      | 王道       | eMAXIS Slim 全米株式                                                    |
 | VYM      | 高配当     | 楽天・米国高配当株式インデックス・ファンド                              |
 | SPYD     | 高配当     | Tracers S&P500配当貴族インデックス（米国株式）                          |
-
-## GitHub Pages で公開する
-
-このリポジトリは静的サイトとしてそのまま公開できます。
-
-1. GitHub の `Settings > Pages` を開く
-2. `Build and deployment` の `Source` を `Deploy from a branch` にする
-3. Branch は `main`（または使っているブランチ）、Folder は `/ (root)` を選ぶ
-4. 保存後、公開 URL にアクセス
-
-公開後のURL例:
-
-- `https://<ユーザー名>.github.io/<リポジトリ名>/`
-- 直接スライド: `https://<ユーザー名>.github.io/<リポジトリ名>/site/slide.html`
