@@ -121,5 +121,17 @@ darbyRawData = [
         { "name": "SOMPO123",  "date": "20260317", "price": 72775 },
         { "name": "VYM",       "date": "20260317", "price": 75215 },
         { "name": "レバナス",   "date": "20260317", "price": 69629 }
+    ],
+    [
+        { "name": "SPYD",      "date": "20260318", "price": 74216 },
+        { "name": "S&P500",    "date": "20260318", "price": 72176 },
+        { "name": "オルカン",   "date": "20260318", "price": 73490 },
+        { "name": "全米株式",   "date": "20260318", "price": 72165 },
+        { "name": "FANG+",     "date": "20260318", "price": 68056 },
+        { "name": "SOX",       "date": "20260318", "price": 80719 },
+        { "name": "ABB",       "date": "20260318", "price": 68980 },
+        { "name": "SOMPO123",  "date": "20260318", "price": 72940 },
+        { "name": "VYM",       "date": "20260318", "price": 75228 },
+        { "name": "レバナス",   "date": "20260318", "price": 70229 }
     ]
 ];
