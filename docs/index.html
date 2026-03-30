@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>投棄信託ダービー - 総集編 連続レース</title>
+  <link rel="stylesheet" href="./style_fhd.css" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="./combined-from-arcs.js"></script>
+  <script>
+    window.DARBY_RACE_CONFIG = {
+      initialLotCount: 0,
+    };
+  </script>
+  <style>
+    body {
+      display: block !important;
+      min-height: 100vh;
+      height: auto !important;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      overflow: auto;
+      background: #fff !important;
+    }
+
+    /* Force this slide to FHD (1920x1080) for generation/cropping */
+    .slide.compact {
+      width: 1920px !important;
+      height: 1080px !important;
+      max-width: none !important;
+      margin: 0 !important;
+      box-sizing: border-box;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+    }
+
+    #slide-stage {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+    }
+
+    #slide-stage .slide.compact {
+      transform-origin: top left;
+      will-change: transform;
+    }
+    /* Ensure content fills the slide height */
+    .slide.compact .content {
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      box-sizing: border-box;
+    }
+    /* Layout tweaks: padding, larger fonts and spacing for FHD */
+    .slide.compact { font-size: 24px; }
+    .slide.compact .content { padding: 28px 48px !important; gap: 18px; }
+    .header { font-size: 48px; font-weight: 800; padding: 8px 0; }
+    .controls { margin-bottom: 18px; }
+    .controls .control-button { font-size: 20px; padding: 8px 14px; }
+
+    /* Give main visualization a larger stable height inside FHD */
+    #race-chart { height: 650px; align-self: stretch; flex: 1 1 auto; }
+    /* Make cockpit same height as the chart and wider for readability; override inline width */
+    .race-cockpit { height: 650px !important; align-self: stretch !important; width: 520px !important; flex: 0 0 520px !important; overflow: auto; padding-left: 24px !important; }
+    /* Ensure the parent flex row stretches children to equal height even if inline style sets align-items */
+    .slide.compact .content > div[style*="display:flex"] { align-items: stretch !important; }
+
+    /* Cockpit font sizing overrides (use !important to beat inline styles) */
+    .race-cockpit { font-size:24px !important; }
+    .race-cockpit .cockpit-header h3 { margin:0; font-size:32px !important; }
+    .race-cockpit .date-display, .race-cockpit .cockpit-header .date-display { font-size:24px !important; }
+    .race-cockpit div, .race-cockpit > div > div { font-size:24px !important; }
+    #cockpit-date { font-size:28px !important; color:#444 !important; }
+    #total-value { font-size:48px !important; font-weight:800 !important; }
+    #leader-name, #best-category { font-size:32px !important; font-weight:700 !important; }
+    #baseline-value { font-size:24px !important; }
+
+    /* Chart text sizing */
+    .bar .lbl { font-size: 32px !important; font-weight: bold; }
+    .bar .val { font-size: 32px !important; font-weight: bold; }
+    .goal-text { font-size: 24px !important; font-weight: bold; }
+    .date-label { font-size: 36px !important; font-weight: bold; }
+
+  </style>
+</head>
+<body>
+  <div id="slide-stage">
+    <div class="slide compact">
+      <div class="content" id="main-content" style="flex-direction:column;transition:background-color 0.3s ease;">
+      <div class="controls" style="margin-bottom:10px;">
+        <button class="control-button" id="play-btn">Play</button>
+        <button class="control-button" id="pause-btn">Pause</button>
+        <button class="control-button" id="reset-btn">Reset</button>
+        <button class="control-button" id="fullscreen-btn">全画面</button>
+  <label>速度 <input type="range" id="speed" min="100" max="1500" value="400" /></label>
+  <span id="accumulation-indicator" style="margin-left:15px;font-weight:700;color:#e84393;font-size:16px;display:none;">💰 積立中...</span>
+      </div>
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div id="race-chart" style="flex:1; width:100%;"></div>
+        <div class="race-cockpit" style="width:260px;">
+          <div class="cockpit-header"><h3 style="margin:0 0 8px 0;">ダービー コックピット</h3>
+            <div class="date-display" id="cockpit-date">ndo-</div>
+          </div>
+          <div style="margin-top:8px;">
+            <div style="margin-bottom:8px;"><div style="font-size:12px;color:#666">総資産</div><div id="total-value" style="font-size:18px;font-weight:700">-</div><div id="total-change" style="font-size:12px;color:#080">-</div></div>
+            <div style="margin-bottom:8px;"><div style="font-size:12px;color:#666">首位</div><div id="leader-name" style="font-size:16px;font-weight:700">-</div><div id="leader-change" style="font-size:12px;color:#080">-</div></div>
+            <div style="margin-bottom:8px;"><div style="font-size:12px;color:#666">最強カテゴリ</div><div id="best-category" style="font-size:14px;font-weight:700">-</div><div id="best-category-change" style="font-size:12px;color:#080">-</div></div>
+            <div style="margin-top:10px;border-top:1px solid #eee;padding-top:8px;"><div style="font-size:12px;color:#666">買い付け金額</div><div id="baseline-value" style="font-size:14px;font-weight:700">- 円</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+<script>
+  (function () {
+    const stage = document.getElementById("slide-stage");
+    const slide = stage ? stage.querySelector(".slide.compact") : null;
+    if (!stage || !slide) return;
+    const baseW = 1920;
+    const baseH = 1080;
+    const padding = 16;
+
+    function fitSlideToViewport() {
+      const availableW = Math.max(320, window.innerWidth - padding * 2);
+      const availableH = Math.max(320, window.innerHeight - padding * 2);
+      const scale = Math.min(availableW / baseW, availableH / baseH, 1);
+
+      stage.style.width = `${Math.floor(baseW * scale)}px`;
+      stage.style.height = `${Math.floor(baseH * scale)}px`;
+      slide.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener("resize", fitSlideToViewport);
+    document.addEventListener("fullscreenchange", fitSlideToViewport);
+    document.addEventListener("webkitfullscreenchange", fitSlideToViewport);
+    fitSlideToViewport();
+  })();
+</script>
+<script src="./race-template.js"></script>
+</body>
+</html>
