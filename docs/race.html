@@ -26,8 +26,11 @@
     /* Script B: 期間フィルター
        combined-from-arcs.js より後・race-template.js より前に登録することで、
        darbyCombinedArcsLoaded イベントを race-template.js より先に受け取り
-       window.darbyCombinedArcs / darbyAccumulationDates / DARBY_RACE_CONFIG.initialLotCount を
-       書き換えてから race-template.js の initializeFromLoadedData が走る。 */
+       window.darbyCombinedArcs / darbyAccumulationDates / DARBY_RACE_CONFIG を
+       書き換えてから race-template.js の initializeFromLoadedData が走る。
+
+       day 0 を「カットオフ前の最終営業日」にすることで、初日は積立なし→
+       最初の積立が in-race イベントとして可視化され、元本が正しく表示される。 */
     (function () {
       const range = window._darbyRange || 'all';
       if (range === 'all') return;
@@ -53,8 +56,17 @@
         while (cm <= 0) { cm += 12; cy--; }
         const cutoff = String(cy) + String(cm).padStart(2, '0') + '01';
 
-        /* データ絞り込み */
-        window.darbyCombinedArcs = combined.filter(function (d) { return d.date >= cutoff; });
+        /* カットオフ直前の最終営業日を探す（day 0 として先頭に追加）
+           これにより day 0 は積立なし→ range 内の最初の積立が in-race イベントになる */
+        let preRangeDay = null;
+        for (let i = combined.length - 1; i >= 0; i--) {
+          if (combined[i].date < cutoff) { preRangeDay = combined[i]; break; }
+        }
+        const rangeDays = combined.filter(function (d) { return d.date >= cutoff; });
+        window.darbyCombinedArcs = preRangeDay ? [preRangeDay].concat(rangeDays) : rangeDays;
+
+        /* day 0 は前月末なので積立しない（range 内の各月の積立を in-race で見せる） */
+        window.DARBY_RACE_CONFIG.day0IsAccumulation = (preRangeDay === null);
 
         /* カットオフ前の積立回数 → initialLotCount として引き継ぎ */
         if (Array.isArray(accumDates)) {
