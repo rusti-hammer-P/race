@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>投棄信託ダービー</title>
+  <title>投機信託ダービー</title>
   <link rel="stylesheet" href="./style_fhd.css" />
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>
@@ -11,9 +11,9 @@
       const params = new URLSearchParams(window.location.search);
       const range = params.get('range') || 'all';
       const META = {
-        '1m':  { title: '投棄信託ダービー - 最新1ヶ月',   header: '最新1ヶ月レース' },
-        '3m':  { title: '投棄信託ダービー - 最新4半期',   header: '最新4半期レース' },
-        'all': { title: '投棄信託ダービー - 総集編 全期間', header: '総集編 全期間レース' },
+        '1m':  { title: '投機信託ダービー - 最新1ヶ月',   header: '最新1ヶ月レース' },
+        '3m':  { title: '投機信託ダービー - 最新4半期',   header: '最新4半期レース' },
+        'all': { title: '投機信託ダービー - 総集編 全期間', header: '総集編 全期間レース' },
       };
       const lbl = META[range] || META['all'];
       document.title = lbl.title;
