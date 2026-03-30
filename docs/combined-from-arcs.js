@@ -3,12 +3,12 @@
 
 (function(){
     const sources = [
-        { id: '2509', candidates: ['dadata/darby-data-2509.js', 'data/darby-data-2509.js'] },
-        { id: '2510', candidates: ['dadata/darby-data-2510.js', 'data/darby-data-2510.js'] },
-        { id: '2511', candidates: ['dadata/darby-data-2511.js', 'data/darby-data-2511.js'] },
-        { id: '2512', candidates: ['dadata/darby-data-2512.js', 'data/darby-data-2512.js'] },
-        { id: '2601', candidates: ['dadata/darby-data-2601.js', 'data/darby-data-2601.js'] },
-        { id: '2602', candidates: ['dadata/darby-data-2602.js', 'data/darby-data-2602.js'] }
+        { id: '2509', candidates: ['data/darby-data-2509.js'] },
+        { id: '2510', candidates: ['data/darby-data-2510.js'] },
+        { id: '2511', candidates: ['data/darby-data-2511.js'] },
+        { id: '2512', candidates: ['data/darby-data-2512.js'] },
+        { id: '2601', candidates: ['data/darby-data-2601.js'] },
+        { id: '2602', candidates: ['data/darby-data-2602.js'] }
     ];
     const arcBoundaries = [];
 
