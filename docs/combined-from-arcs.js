@@ -8,7 +8,8 @@
         { id: '2511', candidates: ['data/darby-data-2511.js'] },
         { id: '2512', candidates: ['data/darby-data-2512.js'] },
         { id: '2601', candidates: ['data/darby-data-2601.js'] },
-        { id: '2602', candidates: ['data/darby-data-2602.js'] }
+        { id: '2602', candidates: ['data/darby-data-2602.js'] },
+        { id: '2603', candidates: ['data/darby-data-2603.js'] }
     ];
     const arcBoundaries = [];
 
