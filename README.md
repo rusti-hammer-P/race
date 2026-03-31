@@ -21,3 +21,7 @@
 | VTI      | 王道       | eMAXIS Slim 全米株式                                                    |
 | VYM      | 高配当     | 楽天・米国高配当株式インデックス・ファンド                              |
 | SPYD     | 高配当     | Tracers S&P500配当貴族インデックス（米国株式）                          |
+
+## レース
+
+[ここ](https://rusti-hammer-p.github.io/race/)から観戦！
