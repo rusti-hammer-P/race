@@ -1,5 +1,5 @@
-// 6ヶ月特別編用：sep〜febのデータを動的ロードして連結
-// 読み込み順: sep -> oct -> nov -> dec -> jan -> feb
+// 月次データを動的ロードして連結
+// 読み込み順: 2509 -> 2510 -> 2511 -> 2512 -> 2601 -> 2602 -> 2603 -> 2604
 
 (function(){
     const sources = [
@@ -9,7 +9,8 @@
         { id: '2512', candidates: ['data/darby-data-2512.js'] },
         { id: '2601', candidates: ['data/darby-data-2601.js'] },
         { id: '2602', candidates: ['data/darby-data-2602.js'] },
-        { id: '2603', candidates: ['data/darby-data-2603.js'] }
+        { id: '2603', candidates: ['data/darby-data-2603.js'] },
+        { id: '2604', candidates: ['data/darby-data-2604.js'] }
     ];
     const arcBoundaries = [];
 
