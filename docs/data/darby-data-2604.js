@@ -192,5 +192,53 @@ darbyRawData = [
         { "name": "SOMPO123",  "date": "20260424", "price": 87913 },
         { "name": "VYM",       "date": "20260424", "price": 89606 },
         { "name": "レバナス",   "date": "20260424", "price": 93806 }
+    ],
+    [
+        { "name": "SPYD",      "date": "20260427", "price": 85030 },
+        { "name": "S&P500",    "date": "20260427", "price": 88118 },
+        { "name": "オルカン",   "date": "20260427", "price": 88865 },
+        { "name": "全米株式",   "date": "20260427", "price": 88186 },
+        { "name": "FANG+",     "date": "20260427", "price": 86632 },
+        { "name": "SOX",       "date": "20260427", "price": 121650 },
+        { "name": "ABB",       "date": "20260427", "price": 84932 },
+        { "name": "SOMPO123",  "date": "20260427", "price": 88300 },
+        { "name": "VYM",       "date": "20260427", "price": 88948 },
+        { "name": "レバナス",   "date": "20260427", "price": 97116 }
+    ],
+    [
+        { "name": "SPYD",      "date": "20260428", "price": 85024 },
+        { "name": "S&P500",    "date": "20260428", "price": 88214 },
+        { "name": "オルカン",   "date": "20260428", "price": 89018 },
+        { "name": "全米株式",   "date": "20260428", "price": 88265 },
+        { "name": "FANG+",     "date": "20260428", "price": 87234 },
+        { "name": "SOX",       "date": "20260428", "price": 120441 },
+        { "name": "ABB",       "date": "20260428", "price": 84887 },
+        { "name": "SOMPO123",  "date": "20260428", "price": 88464 },
+        { "name": "VYM",       "date": "20260428", "price": 88737 },
+        { "name": "レバナス",   "date": "20260428", "price": 97148 }    
+    ],
+    [
+        { "name": "SPYD",      "date": "20260430", "price": 84880 },
+        { "name": "S&P500",    "date": "20260430", "price": 88216 },
+        { "name": "オルカン",   "date": "20260430", "price": 88798 },
+        { "name": "全米株式",   "date": "20260430", "price": 88181 },
+        { "name": "FANG+",     "date": "20260430", "price": 86768 },
+        { "name": "SOX",       "date": "20260430", "price": 119502 },
+        { "name": "ABB",       "date": "20260430", "price": 84645 },
+        { "name": "SOMPO123",  "date": "20260430", "price": 88554 },
+        { "name": "VYM",       "date": "20260430", "price": 89148 },
+        { "name": "レバナス",   "date": "20260430", "price": 96856 }
+    ],
+    [
+        { "name": "SPYD",      "date": "20260501", "price": 84073 },
+        { "name": "S&P500",    "date": "20260501", "price": 87315 },
+        { "name": "オルカン",   "date": "20260501", "price": 87912 },
+        { "name": "全米株式",   "date": "20260501", "price": 87358 },
+        { "name": "FANG+",     "date": "20260501", "price": 84988 },
+        { "name": "SOX",       "date": "20260501", "price": 119683 },
+        { "name": "ABB",       "date": "20260501", "price": 83589 },
+        { "name": "SOMPO123",  "date": "20260501", "price": 87807 },
+        { "name": "VYM",       "date": "20260501", "price": 88867 },
+        { "name": "レバナス",   "date": "20260501", "price": 96766 }    
     ]
 ];
