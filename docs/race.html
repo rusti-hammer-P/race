@@ -184,6 +184,7 @@
         <button class="control-button" id="play-btn">Play</button>
         <button class="control-button" id="pause-btn">Pause</button>
         <button class="control-button" id="reset-btn">Reset</button>
+        <select id="start-date-select" class="control-button"><option value="">開始日を選択...</option></select>
         <button class="control-button" id="fullscreen-btn">全画面</button>
   <label>速度 <input type="range" id="speed" min="100" max="1500" value="400" /></label>
   <span id="accumulation-indicator" style="margin-left:15px;font-weight:700;color:#e84393;font-size:16px;display:none;">💰 積立中...</span>
@@ -231,5 +232,57 @@
   })();
 </script>
 <script src="./race-template.js"></script>
+<script>
+  /* Script C: 開始日ドロップダウン
+     race-template.js の derbyCombinedArcsLoaded リスナーより後に登録されるため、
+     このリスナーが実行される時点で window.derbyRace は確実にセット済み。 */
+  (function () {
+    function populateStartDateDropdown() {
+      const sel = document.getElementById('start-date-select');
+      if (!sel) return;
+
+      const combined   = window.derbyCombinedArcs;
+      const accumDates = window.derbyAccumulationDates;
+      if (!Array.isArray(combined) || !Array.isArray(accumDates)) return;
+
+      /* date → index マップを構築 */
+      const dateToIndex = {};
+      combined.forEach(function (d, i) { dateToIndex[d.date] = i; });
+
+      /* 既存 option（プレースホルダー以外）をクリア */
+      while (sel.options.length > 1) sel.remove(1);
+
+      /* 積立日のみをオプションとして追加 */
+      accumDates.forEach(function (d) {
+        if (!(d in dateToIndex)) return;
+        const opt = document.createElement('option');
+        opt.value = String(dateToIndex[d]);
+        /* YYYYMMDD → YYYY/MM/DD */
+        opt.textContent = d.slice(0, 4) + '/' + d.slice(4, 6) + '/' + d.slice(6, 8);
+        sel.appendChild(opt);
+      });
+
+      sel.addEventListener('change', function () {
+        if (sel.value === '') return;
+        const idx = parseInt(sel.value, 10);
+        if (window.derbyRace && !isNaN(idx)) {
+          window.derbyRace.seekTo(idx);
+        }
+        /* プレースホルダーに戻す */
+        sel.value = '';
+      });
+    }
+
+    document.addEventListener('derbyCombinedArcsLoaded', function onLoaded() {
+      document.removeEventListener('derbyCombinedArcsLoaded', onLoaded);
+      populateStartDateDropdown();
+    });
+
+    /* イベント取りこぼし対策 */
+    if (Array.isArray(window.derbyCombinedArcs) && window.derbyCombinedArcs.length) {
+      populateStartDateDropdown();
+    }
+  })();
+</script>
 </body>
 </html>

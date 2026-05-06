@@ -215,6 +215,7 @@
   let dwellTimer = null;
   let lastOrder = []; // 順位変動検出用
   let rankChangeDetected = false; // 順位変動フラグ
+  let startIndex = 0; // 營業日カウンターの基準（seekTo/reset のタイミングで更新）
 
   function createRaceChart() {
     const container = d3.select("#race-chart");
@@ -317,7 +318,7 @@
 
       // Show business-day counter (0-based)
       const dateStr = dObj.date;
-      dateLabel.text(`${currentIndex}営業日経過`);
+      dateLabel.text(`${currentIndex - startIndex}営業日経過`);
 
       // 基準ライン（補間フレームがあればそれを使用、なければ現在の離散値）
       const discreteBaseline = baselineAtIndex[currentIndex] || INITIAL_INVESTMENT_AMOUNT;
@@ -337,8 +338,9 @@
         .style("font-feature-settings", '"tnum"') // 等幅数字
         .style("font-variant-numeric", "tabular-nums")
         .text(`投資元本: ${padded}円 (積立${lotCountDisplay}回)`);
-      // 積立日のときはラインを少し強調（ただし最初の積立日は除く）
-      const accumEmphasis = ((dObj && dObj._accumBlend) ? true : !!isAccumDay[currentIndex]) && currentLot > 1;
+      // 積立演出はアニメーション補間中（_accumBlend）のときのみ有効
+      // 静止表示時（seekTo 直後・Reset 後）は演出しない
+      const accumEmphasis = !!(dObj && dObj._accumBlend) && currentLot > 1;
       baseLine
         .style("stroke-width", accumEmphasis ? 3 : 1.5)
         .style("stroke", accumEmphasis ? "#e84393" : "#666")
@@ -427,8 +429,17 @@
     }
 
     // リセット時のスケール初期化関数
-    const resetScale = () => {
-      currentMaxDomain = initialBaseline * 1.3;
+    // toIndex を省略すると day 0 基準（既存の Reset ボタンの挙動）
+    // toIndex を指定するとその日のデータに合ったスケールを即座にセット
+    const resetScale = (toIndex) => {
+      const idx = (typeof toIndex === 'number') ? toIndex : 0;
+      const baseline = baselineAtIndex[idx] || INITIAL_INVESTMENT_AMOUNT;
+      const dayData = simpleSeq[idx];
+      let maxVal = baseline;
+      if (dayData) {
+        FUNDS.forEach(function (f) { if ((dayData[f] || 0) > maxVal) maxVal = dayData[f]; });
+      }
+      currentMaxDomain = Math.max(baseline * 1.3, maxVal * 1.1);
       targetMaxDomain = currentMaxDomain;
       window._baselinePixelRatio = undefined;
     };
@@ -687,6 +698,7 @@
     pause();
     if (chart.resetScale) chart.resetScale();
     currentIndex = 0;
+    startIndex = 0;
     chart();
   }
 
@@ -765,6 +777,19 @@
     btnPlay.disabled = false;
     btnPause.disabled = false;
     btnReset.disabled = false;
+
+    /* seekTo API: 外部スクリプトから任意インデックスにジャンプ＋一時停止できるようにする */
+    window.derbyRace = {
+      seekTo: function (index) {
+        pause();
+        const targetIdx = Math.max(0, Math.min(index, simpleSeq.length - 1));
+        if (chart.resetScale) chart.resetScale(targetIdx);
+        currentIndex = targetIdx;
+        startIndex = targetIdx;
+        chart();
+      },
+      getSeqLength: function () { return simpleSeq.length; },
+    };
   }
 
   // 非同期ロード完了後に初期化
