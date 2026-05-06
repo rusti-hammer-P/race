@@ -504,7 +504,7 @@
     bc.textContent = `${bestCatPerf >= 0 ? "+" : ""}${bestCatPerf.toFixed(1)}%`;
     bc.style.color = bestCatPerf >= 0 ? "#0a0" : "#b00";
     // baseline display
-    document.getElementById("baseline-value").textContent = `${Math.round(investedPrincipal).toLocaleString()} 円 (投資元本×${fundsCount}ファンド×${lotCount}回)`;
+    document.getElementById("baseline-value").textContent = `${Math.round(investedPrincipal).toLocaleString()} 円 (投資元本×${fundsCount}ファンド×${Math.round(lotCount)}回)`;
   }
 
   // 補間描画 - バブルソート的に隣同士を交換して最終順序に到達
