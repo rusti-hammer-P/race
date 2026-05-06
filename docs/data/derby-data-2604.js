@@ -1,6 +1,6 @@
-// darby April sample data
+// derby April sample data
 
-darbyRawData = [
+derbyRawData = [
     [
         { "name": "SPYD",      "date": "20260403", "price": 83453 },
         { "name": "S&P500",    "date": "20260403", "price": 80996 },

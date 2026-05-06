@@ -1,7 +1,7 @@
-// darby February sample data (extracted from darby-data-jan.js)
+// derby February sample data (extracted from derby-data-jan.js)
 // Note: file created in working tree only — no commit performed.
 
-darbyRawData = [
+derbyRawData = [
     [
         { "name": "SPYD",      "date": "20260204", "price": 65264 },
         { "name": "S&P500",    "date": "20260204", "price": 62732 },

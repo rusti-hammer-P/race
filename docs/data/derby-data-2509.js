@@ -1,5 +1,5 @@
 // 投機信託ダービーのサンプルデータ
-const darbyRawData = [
+const derbyRawData = [
     [
         { "name": "SPYD", "date": "20250903", "price": 10001 },
         { "name": "S&P500", "date": "20250903", "price": 10000 },

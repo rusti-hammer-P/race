@@ -1,4 +1,4 @@
-darbyRawData = [
+derbyRawData = [
     [
         { "name": "SPYD", "date": "20251203", "price": 41640 },
         { "name": "S&P500", "date": "20251203", "price": 42127 },

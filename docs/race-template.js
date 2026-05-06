@@ -1,5 +1,5 @@
 // Reusable race slide logic.
-// Configure via window.DARBY_RACE_CONFIG before loading this script.
+// Configure via window.DERBY_RACE_CONFIG before loading this script.
 (function () {
   // ===== CONFIG (defaults) =====
   const DEFAULT_FUNDS = [
@@ -28,8 +28,8 @@
     SPYD: "#e67e22",
   };
 
-  const config = (window.DARBY_RACE_CONFIG && typeof window.DARBY_RACE_CONFIG === "object")
-    ? window.DARBY_RACE_CONFIG
+  const config = (window.DERBY_RACE_CONFIG && typeof window.DERBY_RACE_CONFIG === "object")
+    ? window.DERBY_RACE_CONFIG
     : {};
 
   // If true (default), treat the first data point as an accumulation day.
@@ -51,8 +51,8 @@
   // mode: 'month-change'（各月の最初の営業日）, 'day-of-month'（指定日。なければ翌営業日、なければ当月最終）,'custom-dates'（YYYYMMDD配列）
   // dayOfMonth: 1-31（存在しない場合はロジックにより調整）
   // dates: 明示指定する場合の配列。例: ['20240910','20241015']
-  const defaultAccumulationDates = (Array.isArray(window.darbyAccumulationDates) && window.darbyAccumulationDates.length)
-    ? window.darbyAccumulationDates.slice()
+  const defaultAccumulationDates = (Array.isArray(window.derbyAccumulationDates) && window.derbyAccumulationDates.length)
+    ? window.derbyAccumulationDates.slice()
     : ["20250903", "20251003", "20251106", "20251203"];
 
   const fallbackAccumulateOn = {
@@ -93,9 +93,9 @@
   }
 
   // ===== DATA PREP =====
-  // combined-from-arcs.js が提供する darbyCombinedArcs を使用（非同期ロード対応）
+  // combined-from-arcs.js が提供する derbyCombinedArcs を使用（非同期ロード対応）
   // 各要素: { date: YYYYMMDD, FUND: 価格 }（9月→10月→11月 レンジ推移）
-  let simpleSeq = Array.isArray(window.darbyCombinedArcs) ? window.darbyCombinedArcs : [];
+  let simpleSeq = Array.isArray(window.derbyCombinedArcs) ? window.derbyCombinedArcs : [];
 
   function computeDisplayValues(index) {
     const slice = simpleSeq[index];
@@ -754,9 +754,9 @@
   }
 
   function initializeFromLoadedData() {
-    simpleSeq = Array.isArray(window.darbyCombinedArcs) ? window.darbyCombinedArcs : [];
-    if (ACCUMULATE_ON.mode === "custom-dates" && Array.isArray(window.darbyAccumulationDates) && window.darbyAccumulationDates.length) {
-      ACCUMULATE_ON.dates = window.darbyAccumulationDates.slice();
+    simpleSeq = Array.isArray(window.derbyCombinedArcs) ? window.derbyCombinedArcs : [];
+    if (ACCUMULATE_ON.mode === "custom-dates" && Array.isArray(window.derbyAccumulationDates) && window.derbyAccumulationDates.length) {
+      ACCUMULATE_ON.dates = window.derbyAccumulationDates.slice();
     }
     computeBaselines();
     currentIndex = 0;
@@ -768,10 +768,10 @@
   }
 
   // 非同期ロード完了後に初期化
-  document.addEventListener("darbyCombinedArcsLoaded", initializeFromLoadedData);
+  document.addEventListener("derbyCombinedArcsLoaded", initializeFromLoadedData);
 
   // 先にデータがロード済みだった場合（イベント取りこぼし）にも初期化
-  if (Array.isArray(window.darbyCombinedArcs) && window.darbyCombinedArcs.length) {
+  if (Array.isArray(window.derbyCombinedArcs) && window.derbyCombinedArcs.length) {
     initializeFromLoadedData();
   }
 })();

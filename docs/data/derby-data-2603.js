@@ -1,7 +1,7 @@
-// darby March sample data (extracted from previous monthly file)
+// derby March sample data (extracted from previous monthly file)
 // Note: file created in working tree only — no commit performed.
 
-darbyRawData = [
+derbyRawData = [
     [
         { "name": "SPYD",      "date": "20260304", "price": 77035 },
         { "name": "S&P500",    "date": "20260304", "price": 72519 },

@@ -3,14 +3,14 @@
 
 (function(){
     const sources = [
-        { id: '2509', candidates: ['data/darby-data-2509.js'] },
-        { id: '2510', candidates: ['data/darby-data-2510.js'] },
-        { id: '2511', candidates: ['data/darby-data-2511.js'] },
-        { id: '2512', candidates: ['data/darby-data-2512.js'] },
-        { id: '2601', candidates: ['data/darby-data-2601.js'] },
-        { id: '2602', candidates: ['data/darby-data-2602.js'] },
-        { id: '2603', candidates: ['data/darby-data-2603.js'] },
-        { id: '2604', candidates: ['data/darby-data-2604.js'] }
+        { id: '2509', candidates: ['data/derby-data-2509.js'] },
+        { id: '2510', candidates: ['data/derby-data-2510.js'] },
+        { id: '2511', candidates: ['data/derby-data-2511.js'] },
+        { id: '2512', candidates: ['data/derby-data-2512.js'] },
+        { id: '2601', candidates: ['data/derby-data-2601.js'] },
+        { id: '2602', candidates: ['data/derby-data-2602.js'] },
+        { id: '2603', candidates: ['data/derby-data-2603.js'] },
+        { id: '2604', candidates: ['data/derby-data-2604.js'] }
     ];
     const arcBoundaries = [];
 
@@ -20,11 +20,11 @@
             if(!res.ok) throw new Error(`HTTP ${res.status}`);
             const code = await res.text();
             // グローバル汚染を避けるためローカルスコープで評価
-            const wrapped = `(function(){ ${code}\n; return (typeof darbyRawData !== 'undefined') ? darbyRawData : (typeof window!=='undefined' ? window.darbyRawData : undefined); })()`;
+            const wrapped = `(function(){ ${code}\n; return (typeof derbyRawData !== 'undefined') ? derbyRawData : (typeof window!=='undefined' ? window.derbyRawData : undefined); })()`;
             // eslint-disable-next-line no-eval
             const data = eval(wrapped);
             if(Array.isArray(data)) return data;
-            console.warn('[combined-from-arcs] No darbyRawData in', src);
+            console.warn('[combined-from-arcs] No derbyRawData in', src);
             return [];
         }catch(err){
             console.warn('[combined-from-arcs] load failed:', src, err);
@@ -71,16 +71,16 @@
             .filter(Boolean)
         )).sort();
 
-        window.darbyCombinedArcs = combined;
-        window.darbyArcBoundaries = boundariesArray;
-        window.darbyAccumulationDates = accumulationDates;
-        document.dispatchEvent(new Event('darbyCombinedArcsLoaded'));
+        window.derbyCombinedArcs = combined;
+        window.derbyArcBoundaries = boundariesArray;
+        window.derbyAccumulationDates = accumulationDates;
+        document.dispatchEvent(new Event('derbyCombinedArcsLoaded'));
     }
 
     // グローバル公開
     window.loadCombinedData = async function(){
-        if(Array.isArray(window.darbyCombinedArcs)){
-            document.dispatchEvent(new Event('darbyCombinedArcsLoaded'));
+        if(Array.isArray(window.derbyCombinedArcs)){
+            document.dispatchEvent(new Event('derbyCombinedArcsLoaded'));
             return;
         }
         const all = [];

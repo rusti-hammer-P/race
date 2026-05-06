@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="./style_fhd.css" />
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>
-    /* Script A: 期間設定 + DARBY_RACE_CONFIG 初期化（combined-from-arcs.js より先に実行） */
+    /* Script A: 期間設定 + DERBY_RACE_CONFIG 初期化（combined-from-arcs.js より先に実行） */
     (function () {
       const params = new URLSearchParams(window.location.search);
       const range = params.get('range') || 'all';
@@ -20,12 +20,12 @@
       /* day0IsAccumulation は race-template.js のロード時に const として評価されるため
          ここで同期的にセットする。range=1m/3m では前月末(preRangeDay)を day 0 に
          据えるので、その日は積立なし → March 2等の積立がレース中のイベントになる。 */
-      window.DARBY_RACE_CONFIG = {
+      window.DERBY_RACE_CONFIG = {
         initialLotCount: 0,
         header: lbl.header,
         day0IsAccumulation: range === 'all',
       };
-      window._darbyRange = range;
+      window._derbyRange = range;
     })();
   </script>
   <script src="./combined-from-arcs.js"></script>
@@ -36,17 +36,17 @@
        day 0 は積立なし(=前月末の評価額) → day 1(=3/2等)で積立イベントが発火する。
        例) range=1m: day0=2/27(60,000円) → day1=3/2(積立↑70,000円・ピンク背景) */
     (function () {
-      const range = window._darbyRange || 'all';
+      const range = window._derbyRange || 'all';
       if (range === 'all') return;
 
       /* N = 表示したい月数 */
       const N = range === '1m' ? 1 : 3;
 
-      document.addEventListener('darbyCombinedArcsLoaded', function filterRange() {
-        document.removeEventListener('darbyCombinedArcsLoaded', filterRange);
+      document.addEventListener('derbyCombinedArcsLoaded', function filterRange() {
+        document.removeEventListener('derbyCombinedArcsLoaded', filterRange);
 
-        const combined   = window.darbyCombinedArcs;
-        const accumDates = window.darbyAccumulationDates;
+        const combined   = window.derbyCombinedArcs;
+        const accumDates = window.derbyAccumulationDates;
         if (!Array.isArray(combined) || !combined.length) return;
 
         /* 末尾日付から (N-1) ヶ月遡ってカットオフ月初日を算出
@@ -67,13 +67,13 @@
           if (combined[i].date < cutoff) { preRangeDay = combined[i]; break; }
         }
         const rangeDays = combined.filter(function (d) { return d.date >= cutoff; });
-        window.darbyCombinedArcs = preRangeDay ? [preRangeDay].concat(rangeDays) : rangeDays;
+        window.derbyCombinedArcs = preRangeDay ? [preRangeDay].concat(rangeDays) : rangeDays;
 
         /* カットオフ前の積立回数 → initialLotCount として引き継ぎ */
         if (Array.isArray(accumDates)) {
-          window.DARBY_RACE_CONFIG.initialLotCount =
+          window.DERBY_RACE_CONFIG.initialLotCount =
             accumDates.filter(function (d) { return d < cutoff; }).length;
-          window.darbyAccumulationDates =
+          window.derbyAccumulationDates =
             accumDates.filter(function (d) { return d >= cutoff; });
         }
       });
