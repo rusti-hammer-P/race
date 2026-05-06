@@ -39,9 +39,6 @@
       const range = window._derbyRange || 'all';
       if (range === 'all') return;
 
-      /* N = 表示したい月数 */
-      const N = range === '1m' ? 1 : 3;
-
       document.addEventListener('derbyCombinedArcsLoaded', function filterRange() {
         document.removeEventListener('derbyCombinedArcsLoaded', filterRange);
 
@@ -49,16 +46,27 @@
         const accumDates = window.derbyAccumulationDates;
         if (!Array.isArray(combined) || !combined.length) return;
 
-        /* 末尾日付から (N-1) ヶ月遡ってカットオフ月初日を算出
-           例: N=1, 末尾=20260331 → cutoff="20260301"
-               N=3, 末尾=20260331 → cutoff="20260101" */
         const lastDate  = combined[combined.length - 1].date;
         const lastYear  = parseInt(lastDate.slice(0, 4), 10);
         const lastMonth = parseInt(lastDate.slice(4, 6), 10);
-        let cm = lastMonth - (N - 1);
-        let cy = lastYear;
-        while (cm <= 0) { cm += 12; cy--; }
-        const cutoff = String(cy) + String(cm).padStart(2, '0') + '01';
+
+        /* カットオフ日を算出
+           1m: 最終日から丸1ヶ月遡ったローリングウィンドウ
+               例) 末尾=20260505 → cutoff="20260405"
+           3m: 末尾月の2ヶ月前の月初（カレンダー3ヶ月分）
+               例) 末尾=20260331 → cutoff="20260101" */
+        let cutoff;
+        if (range === '1m') {
+          let cm = lastMonth - 1;
+          let cy = lastYear;
+          if (cm <= 0) { cm += 12; cy--; }
+          cutoff = String(cy) + String(cm).padStart(2, '0') + lastDate.slice(6, 8);
+        } else {
+          let cm = lastMonth - 2;
+          let cy = lastYear;
+          while (cm <= 0) { cm += 12; cy--; }
+          cutoff = String(cy) + String(cm).padStart(2, '0') + '01';
+        }
 
         /* カットオフ直前の最終営業日を day 0（非積立）として先頭に追加。
            これにより最初の積立がレース中の最初のイベントとして可視化される。 */
