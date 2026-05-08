@@ -73,7 +73,7 @@
   const dwell = (config.dwell && typeof config.dwell === "object") ? config.dwell : {};
   const DWELL_NORMAL = Number.isFinite(dwell.normal) ? dwell.normal : 125;
   const DWELL_ACCUM = Number.isFinite(dwell.accum) ? dwell.accum : 225;
-  const DWELL_RANK_CHANGE = Number.isFinite(dwell.rankChange) ? dwell.rankChange : 400;
+  const DWELL_RANK_CHANGE = Number.isFinite(dwell.rankChange) ? dwell.rankChange : 200;
 
   const msPerSwap = Number.isFinite(config.msPerSwap) ? config.msPerSwap : 220;
   const speedDefault = Number.isFinite(config.speedDefault) ? config.speedDefault : 400;
@@ -214,7 +214,6 @@
   let rafTimer = null;
   let dwellTimer = null;
   let lastOrder = []; // 順位変動検出用
-  let rankChangeDetected = false; // 順位変動フラグ
   let startIndex = 0; // 營業日カウンターの基準（seekTo/reset のタイミングで更新）
 
   function createRaceChart() {
@@ -273,8 +272,7 @@
       if (dObj && dObj._displayOrder) {
         order = dObj._displayOrder;
       } else {
-        order = FUNDS.slice();
-        order.sort((a, b) => (dObj[b] || 0) - (dObj[a] || 0));
+        order = getOrderForSlice(dObj);
       }
       const maxV = d3.max(order, (f) => dObj[f] || 0) || 0;
 
@@ -357,21 +355,6 @@
         accumIndicator.style.display = "none";
       }
 
-      // 順位変動検出と変動の大きさを計算
-      rankChangeDetected = false;
-      let maxRankChange = 0; // 最大順位変動幅
-
-      if (lastOrder.length > 0 && JSON.stringify(lastOrder) !== JSON.stringify(order)) {
-        rankChangeDetected = true;
-        // 各ファンドの順位変動幅を計算
-        for (let i = 0; i < order.length; i++) {
-          const fund = order[i];
-          const oldIdx = lastOrder.indexOf(fund);
-          const newIdx = i;
-          const rankChange = Math.abs(newIdx - oldIdx);
-          maxRankChange = Math.max(maxRankChange, rankChange);
-        }
-      }
       lastOrder = order.slice();
 
       const bars = g.selectAll(".bar").data(order, (d) => d);
@@ -383,41 +366,20 @@
 
       const merged = enter.merge(bars);
 
-      // 順位の最大変動幅に応じたアニメーション時間を決定
-      const rankChangeRatio = Math.min(maxRankChange / FUNDS.length, 1); // 最大1.0に正規化
-      const baseDuration = speed * 0.7;
-      const adjustedDuration = baseDuration * (1 + rankChangeRatio * 3); // 最大4倍まで遅くなる
-
       merged.each(function (d) {
-        d3.select(this)
-          .transition()
-          .duration(adjustedDuration)
-          .ease(d3.easeCubicOut)
-          .attr("transform", `translate(0,${y(d)})`);
-
-        d3.select(this)
-          .select("rect")
-          .transition()
-          .duration(adjustedDuration)
-          .ease(d3.easeCubicOut)
+        const group = d3.select(this);
+        const displayPositions = dObj && dObj._displayPositions;
+        const slot = displayPositions && Number.isFinite(displayPositions[d]) ? displayPositions[d] : order.indexOf(d);
+        group.attr("transform", `translate(0,${y.step() * slot})`);
+        group.select("rect")
           .attr("x", 0)
           .attr("width", x(dObj[d] || 0))
           .attr("height", y.bandwidth())
           .attr("fill", COLORS[d] || "#999");
-
-        d3.select(this)
-          .select(".lbl")
-          .transition()
-          .duration(adjustedDuration)
-          .ease(d3.easeCubicOut)
+        group.select(".lbl")
           .attr("y", y.bandwidth() / 2)
           .text(d);
-
-        d3.select(this)
-          .select(".val")
-          .transition()
-          .duration(adjustedDuration)
-          .ease(d3.easeCubicOut)
+        group.select(".val")
           .attr("y", y.bandwidth() / 2)
           .attr("x", x(dObj[d] || 0) + 8)
           .text(`${Math.round(dObj[d] || 0).toLocaleString()}円`);
@@ -537,38 +499,32 @@
     const finalOrder = FUNDS.slice();
     finalOrder.sort((x, y) => (b[y] || 0) - (b[x] || 0));
 
-    // 正しいバブルソート: 最終順序に到達するために必要な交換をする
+    // 実際の隣接交換列を先に作り、その進行度で表示位置を決める
+    const swapSequence = buildSwapSequence(currentOrder, finalOrder);
     let workingOrder = currentOrder.slice();
-    const totalSwapsNeeded = calculateSwapsNeeded(currentOrder, finalOrder);
-    const swapsToApply = Math.floor(t * totalSwapsNeeded);
+    const totalSwapsNeeded = swapSequence.length;
+    const swapProgress = t * totalSwapsNeeded;
+    const swapsToApply = Math.floor(swapProgress);
+    const partialSwapProgress = swapProgress - swapsToApply;
 
-    let swapCount = 0;
-    // バブルソート: passごとに1周、隣同士のみ比較交換
-    let done = false;
-    for (let pass = 0; pass < workingOrder.length && !done && swapCount < swapsToApply; pass++) {
-      let swappedThisPass = false;
-      for (let j = 0; j < workingOrder.length - 1 - pass; j++) {
-        if (swapCount >= swapsToApply) {
-          done = true;
-          break;
-        }
-        const curr = workingOrder[j];
-        const next = workingOrder[j + 1];
-        const currTargetIdx = finalOrder.indexOf(curr);
-        const nextTargetIdx = finalOrder.indexOf(next);
-
-        // 最終順序でcurrが後ろにいるなら交換
-        if (currTargetIdx > nextTargetIdx) {
-          [workingOrder[j], workingOrder[j + 1]] = [workingOrder[j + 1], workingOrder[j]];
-          swapCount++;
-          swappedThisPass = true;
-        }
-      }
-      // バブルソートが完全にソートされたら終了
-      if (!swappedThisPass) break;
+    for (let swapIndex = 0; swapIndex < swapsToApply; swapIndex++) {
+      const leftIndex = swapSequence[swapIndex];
+      [workingOrder[leftIndex], workingOrder[leftIndex + 1]] = [workingOrder[leftIndex + 1], workingOrder[leftIndex]];
     }
 
     out._displayOrder = workingOrder;
+    const displayPositions = {};
+    workingOrder.forEach((fund, idx) => {
+      displayPositions[fund] = idx;
+    });
+    if (partialSwapProgress > 0 && swapsToApply < totalSwapsNeeded) {
+      const nextSwapIndex = swapSequence[swapsToApply];
+      const leftFund = workingOrder[nextSwapIndex];
+      const rightFund = workingOrder[nextSwapIndex + 1];
+      displayPositions[leftFund] = nextSwapIndex + partialSwapProgress;
+      displayPositions[rightFund] = nextSwapIndex + 1 - partialSwapProgress;
+    }
+    out._displayPositions = displayPositions;
     out._sortSwapsNeeded = totalSwapsNeeded; // ソート回数を保存
 
     // 次の日(i+1)が積立日かどうか
@@ -593,9 +549,8 @@
     return out;
   }
 
-  // バブルソートに必要な交換回数を計算
-  function calculateSwapsNeeded(current, target) {
-    let swaps = 0;
+  function buildSwapSequence(current, target) {
+    const swaps = [];
     const work = current.slice();
 
     // 標準的なバブルソート: 隣同士の比較交換でソート
@@ -605,14 +560,32 @@
         const currIdx = target.indexOf(work[j]);
         const nextIdx = target.indexOf(work[j + 1]);
         if (currIdx > nextIdx) {
+          swaps.push(j);
           [work[j], work[j + 1]] = [work[j + 1], work[j]];
-          swaps++;
           swapped = true;
         }
       }
       if (!swapped) break;
     }
     return swaps;
+  }
+
+  function getOrderForSlice(slice) {
+    const order = FUNDS.slice();
+    order.sort((a, b) => (slice[b] || 0) - (slice[a] || 0));
+    return order;
+  }
+
+  function calculateMaxRankChange(current, target) {
+    let maxChange = 0;
+    for (let i = 0; i < target.length; i++) {
+      const fund = target[i];
+      const oldIdx = current.indexOf(fund);
+      if (oldIdx >= 0) {
+        maxChange = Math.max(maxChange, Math.abs(i - oldIdx));
+      }
+    }
+    return maxChange;
   }
 
   const chart = createRaceChart();
@@ -634,6 +607,13 @@
         pause();
         return;
       }
+
+      const currentSlice = simpleSeq[currentIndex];
+      const nextSlice = simpleSeq[currentIndex + 1] || currentSlice;
+      const currentOrder = getOrderForSlice(currentSlice);
+      const nextOrder = getOrderForSlice(nextSlice);
+      const maxRankChange = calculateMaxRankChange(currentOrder, nextOrder);
+      const hasRankChange = maxRankChange > 0;
 
       // ソート回数に基づいてアニメーション時間を計算
       const frame = interpolateSlice(currentIndex, 0.99); // ほぼ完全に進めてソート回数を取得
@@ -658,7 +638,7 @@
           chart();
           // ポーズ時間決定: 順位変動 > 積立日 > 通常
           let dwell = DWELL_NORMAL;
-          if (rankChangeDetected) {
+          if (hasRankChange) {
             dwell = DWELL_RANK_CHANGE; // 順位変動時は最長
           } else if (isAccumDay[currentIndex]) {
             dwell = DWELL_ACCUM; // 積立日は中程度
@@ -714,7 +694,7 @@
   document.getElementById("reset-btn").addEventListener("click", reset);
   document.getElementById("speed").addEventListener("input", (e) => {
     speed = +e.target.value;
-    if (isPlaying) {
+    if (isPlaying && rafTimer) {
       pause();
       play();
     }
