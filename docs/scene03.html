@@ -1,0 +1,378 @@
+<!-- OBSOLETE: このファイルは使用されていません。エントリーポイントは chase.html → scene06.html です。 -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, initial-scale=1.0">
+  <title>VT Chase - 月内推移</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="./chase-utils.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #fff7ed 0%, #fde7d1 100%);
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      margin: 0 auto;
+      padding: 40px 48px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 22px;
+      padding: 28px 32px;
+      box-shadow: 0 18px 40px rgba(150, 88, 20, 0.12);
+    }
+
+    .title {
+      font-size: 52px;
+      font-weight: 900;
+      color: #442c14;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 28px;
+      color: #7c5a3a;
+    }
+
+    .panels-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .panel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 24px;
+      padding: 28px 30px 20px;
+      box-shadow: 0 18px 44px rgba(109, 67, 16, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 450px;
+    }
+
+    .panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .panel-title {
+      font-size: 34px;
+      font-weight: 900;
+      color: #4b341d;
+    }
+
+    .legend {
+      font-size: 22px;
+      color: #7c5a3a;
+    }
+
+    .chart-wrap {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .return-container {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .return-card {
+      background: linear-gradient(135deg, #f5f3f0 0%, #ede9e4 100%);
+      border-radius: 16px;
+      padding: 20px 28px;
+      text-align: center;
+      min-width: 280px;
+    }
+
+    .return-label {
+      font-size: 18px;
+      color: #7c5a3a;
+      margin-bottom: 8px;
+    }
+
+    .return-values {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .return-item {
+      flex: 1;
+    }
+
+    .return-item-label {
+      font-size: 14px;
+      color: #9d7d5c;
+      margin-bottom: 4px;
+    }
+
+    .return-item-value {
+      font-size: 24px;
+      font-weight: 900;
+      font-family: 'Courier New', monospace;
+    }
+
+    .return-item-value.positive {
+      color: #059669;
+    }
+
+    .return-item-value.negative {
+      color: #dc2626;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <section class="header">
+      <div class="title">月内の値動き</div>
+      <div class="subtitle" id="subtitle">読み込み中...</div>
+    </section>
+
+    <div class="panels-container">
+      <section class="panel">
+        <div class="panel-top">
+          <div class="panel-title">楽天VT の推移</div>
+          <div class="legend">青: 実績（当月） / 薄青: 期待値（年15%、当月） / 濃青: 期待値（累積営業日）</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chartVT"></canvas>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-top">
+          <div class="panel-title">レバナス の推移</div>
+          <div class="legend">ピンク: 実績（当月） / 薄ピンク: 期待値（年30%、当月） / 濃ピンク: 期待値（累積営業日）</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chartLev"></canvas>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-top">
+          <div class="panel-title">当月実績年率</div>
+          <div class="legend">積立日（初日）から月末までの価格変化を年率換算</div>
+        </div>
+        <div class="return-container">
+          <div class="return-card">
+            <div class="return-label">楽天VT</div>
+            <div class="return-values">
+              <div class="return-item">
+                <div class="return-item-label">実績</div>
+                <div class="return-item-value" id="vtReturn">-</div>
+              </div>
+              <div class="return-item">
+                <div class="return-item-label">期待（年15%）</div>
+                <div class="return-item-value">15.0%</div>
+              </div>
+            </div>
+          </div>
+          <div class="return-card">
+            <div class="return-label">レバナス</div>
+            <div class="return-values">
+              <div class="return-item">
+                <div class="return-item-label">実績</div>
+                <div class="return-item-value" id="levanasReturn">-</div>
+              </div>
+              <div class="return-item">
+                <div class="return-item-label">期待（年30%）</div>
+                <div class="return-item-value">30.0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (async function init() {
+      const monthId = ChaseData.getSelectedMonthId();
+      const meta = ChaseData.getMonthMeta(monthId);
+      const days = await ChaseData.loadMonthData(monthId).catch(() => []);
+      if (!days.length) {
+        document.getElementById('subtitle').textContent = `${meta.label} | データを読み込めませんでした`;
+        return;
+      }
+      const labels = days.map((day, i) => `第${i + 1}営業日`);
+      const cumulative = await ChaseData.getCumulativeTradingDay(monthId).catch(() => null);
+      const subtitle = cumulative
+        ? `${meta.label}（第${cumulative.start + 1}～${cumulative.end}営業日目）| ${days.length}営業日`
+        : `${meta.label} | ${days.length}営業日`;
+      document.getElementById('subtitle').textContent = subtitle;
+
+      const targets = ChaseData.getTargetReturns();
+      const expectedVT = ChaseData.computeExpectedTrend(days[0].vt, targets.vt, days.length);
+      const expectedLev = ChaseData.computeExpectedTrend(days[0].levanas, targets.levanas, days.length);
+      const cumulativeExpected = await ChaseData.getCumulativeExpectedTrend(monthId).catch(() => ({ vt: [], levanas: [] }));
+      const cumulativeVT = cumulativeExpected.vt.slice(-days.length);
+      const cumulativeLev = cumulativeExpected.levanas.slice(-days.length);
+
+      // VT Chart
+      new Chart(document.getElementById('chartVT'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: '楽天VT 実績',
+              data: days.map((day) => day.vt),
+              borderColor: '#3498db',
+              backgroundColor: 'rgba(52, 152, 219, 0.12)',
+              borderWidth: 5,
+              pointRadius: 0,
+              tension: 0.25,
+            },
+            {
+              label: '楽天VT 期待値（年15%、当月）',
+              data: expectedVT,
+              borderColor: '#93c5fd',
+              borderDash: [6, 4],
+              backgroundColor: 'transparent',
+              borderWidth: 3,
+              pointRadius: 0,
+              tension: 0.25,
+            },
+            {
+              label: '楽天VT 期待値（累積営業日）',
+              data: cumulativeVT,
+              borderColor: '#1e3a8a',
+              borderDash: [3, 3],
+              backgroundColor: 'transparent',
+              borderWidth: 4,
+              pointRadius: 0,
+              tension: 0.25,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                font: { size: 24, weight: '700' },
+              },
+            },
+          },
+          scales: {
+            y: {
+              min: Math.min(...days.map(d => d.vt), ...expectedVT) * 0.95,
+              max: Math.max(...days.map(d => d.vt), ...expectedVT) * 1.05,
+              ticks: {
+                font: { size: 20 },
+                callback: (value) => Number(value).toLocaleString('ja-JP'),
+              },
+            },
+            x: {
+              ticks: { font: { size: 20 } },
+            },
+          },
+        },
+      });
+
+      // Levanas Chart
+      new Chart(document.getElementById('chartLev'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'レバナス 実績',
+              data: days.map((day) => day.levanas),
+              borderColor: '#e84393',
+              backgroundColor: 'rgba(232, 67, 147, 0.12)',
+              borderWidth: 5,
+              pointRadius: 0,
+              tension: 0.25,
+            },
+            {
+              label: 'レバナス 期待値（年30%、当月）',
+              data: expectedLev,
+              borderColor: '#f8a1d8',
+              borderDash: [6, 4],
+              backgroundColor: 'transparent',
+              borderWidth: 3,
+              pointRadius: 0,
+              tension: 0.25,
+            },
+            {
+              label: 'レバナス 期待値（累積営業日）',
+              data: cumulativeLev,
+              borderColor: '#7c1d5e',
+              borderDash: [3, 3],
+              backgroundColor: 'transparent',
+              borderWidth: 4,
+              pointRadius: 0,
+              tension: 0.25,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                font: { size: 24, weight: '700' },
+              },
+            },
+          },
+          scales: {
+            y: {
+              min: Math.min(...days.map(d => d.levanas), ...expectedLev) * 0.95,
+              max: Math.max(...days.map(d => d.levanas), ...expectedLev) * 1.05,
+              ticks: {
+                font: { size: 20 },
+                callback: (value) => Number(value).toLocaleString('ja-JP'),
+              },
+            },
+            x: {
+              ticks: { font: { size: 20 } },
+            },
+          },
+        },
+      });
+
+      // Display DCA return rates
+      const dcaReturn = ChaseData.computeDCAReturnRate(days);
+      if (dcaReturn.vt !== null) {
+        const vtValue = dcaReturn.vt * 100;
+        const vtElement = document.getElementById('vtReturn');
+        vtElement.textContent = vtValue.toFixed(1) + '%';
+        vtElement.className = 'return-item-value ' + (vtValue >= 0 ? 'positive' : 'negative');
+      }
+      if (dcaReturn.levanas !== null) {
+        const levanasValue = dcaReturn.levanas * 100;
+        const levanasElement = document.getElementById('levanasReturn');
+        levanasElement.textContent = levanasValue.toFixed(1) + '%';
+        levanasElement.className = 'return-item-value ' + (levanasValue >= 0 ? 'positive' : 'negative');
+      }
+    })();
+  </script>
+</body>
+</html>

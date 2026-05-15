@@ -1,0 +1,125 @@
+<!-- OBSOLETE: このファイルは使用されていません。エントリーポイントは chase.html → scene06.html です。 -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, initial-scale=1.0">
+  <title>VT Chase - 全月一覧</title>
+  <script src="./chase-utils.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #f7f7ff 0%, #e5e8ff 100%);
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      margin: 0 auto;
+      padding: 38px 42px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .header {
+      background: rgba(255,255,255,0.94);
+      border-radius: 22px;
+      padding: 24px 28px;
+      box-shadow: 0 18px 44px rgba(54, 67, 155, 0.12);
+    }
+
+    .title {
+      font-size: 48px;
+      font-weight: 900;
+      color: #232d62;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 26px;
+      color: #556090;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.95);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 18px 44px rgba(60, 67, 145, 0.12);
+    }
+
+    thead th {
+      background: #2b3578;
+      color: #fff;
+      padding: 18px 16px;
+      font-size: 24px;
+      text-align: left;
+    }
+
+    tbody td {
+      padding: 18px 16px;
+      font-size: 24px;
+      border-top: 1px solid #e1e6ff;
+    }
+
+    tbody tr.active {
+      background: #eef1ff;
+      font-weight: 800;
+    }
+
+    .right {
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <section class="header">
+      <div class="title">全月一覧</div>
+      <div class="subtitle" id="subtitle">読み込み中...</div>
+    </section>
+    <table>
+      <thead>
+        <tr>
+          <th>月</th>
+          <th class="right">営業日数</th>
+          <th class="right">累積営業日</th>
+          <th class="right">楽天VT 月末</th>
+          <th class="right">レバナス 月末</th>
+          <th class="right">月末差</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    (async function init() {
+      const selected = ChaseData.getSelectedMonthId();
+      const rows = await ChaseData.loadAllMonths().catch(() => []);
+      document.getElementById('subtitle').textContent = `選択中: ${ChaseData.getMonthMeta(selected).label}`;
+      if (!rows.length) {
+        document.getElementById('subtitle').textContent = '全月データを読み込めませんでした';
+        document.getElementById('tbody').innerHTML = '<tr><td colspan="5">データなし</td></tr>';
+        return;
+      }
+      document.getElementById('tbody').innerHTML = rows.map(({ month, summary, tradingDays, cumulativeStart, cumulativeEnd }) => {
+        if (!summary) return '';
+        return `
+          <tr class="${month.id === selected ? 'active' : ''}">
+            <td>${month.label}</td>
+            <td class="right">${tradingDays}</td>
+            <td class="right">${cumulativeStart + 1}～${cumulativeEnd}</td>
+            <td class="right">${ChaseData.formatYen(summary.vtEnd)}</td>
+            <td class="right">${ChaseData.formatYen(summary.levanasEnd)}</td>
+            <td class="right">${ChaseData.formatYen(summary.gapEnd)}</td>
+          </tr>`;
+      }).join('');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>VT Chase — データビュー</title>
+  <script src="./chase-utils.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f1117;
+      font-family: 'Noto Sans JP', sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── ナビゲーションバー ── */
+    .nav {
+      background: #1a1d2e;
+      border-bottom: 2px solid #2e3352;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .nav-title {
+      color: #8899cc;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+
+    .nav button {
+      background: #2e3352;
+      color: #ccd6f6;
+      border: 1px solid #3a4070;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      transition: background .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .nav button:hover {
+      background: #3a4480;
+      border-color: #5566aa;
+    }
+    .nav button.active {
+      background: #4a69bd;
+      border-color: #7799dd;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .nav select {
+      background: #2e3352;
+      color: #ccd6f6;
+      border: 1px solid #3a4070;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    /* キャラ非表示トグル */
+    .toggle-label {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #8899cc;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-label input { cursor: pointer; accent-color: #4a69bd; }
+
+    /* ── iframe コンテナ ── */
+    .frame-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    iframe {
+      width: 1920px;
+      height: 1080px;
+      border: none;
+      transform-origin: top left;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">VT Chase — 通算リターン</span>
+
+  <select id="month-select" aria-label="対象月"></select>
+</div>
+
+<div class="frame-wrap" id="frame-wrap">
+  <iframe id="scene-frame" src="scene06.html"></iframe>
+</div>
+
+<script>
+  const frame   = document.getElementById('scene-frame');
+  const wrap    = document.getElementById('frame-wrap');
+  const monthSelect = document.getElementById('month-select');
+  const currentScene = 'scene06.html';
+
+  /* ── スケーリング ── */
+  function rescale() {
+    const scaleX = wrap.clientWidth  / 1920;
+    const scaleY = wrap.clientHeight / 1080;
+    const scale  = Math.min(scaleX, scaleY);
+    frame.style.transform = `scale(${scale})`;
+
+    // センタリング
+    const tx = (wrap.clientWidth  - 1920 * scale) / 2;
+    const ty = (wrap.clientHeight - 1080 * scale) / 2;
+    frame.style.marginLeft = `${tx}px`;
+    frame.style.marginTop  = `${ty}px`;
+  }
+  window.addEventListener('resize', rescale);
+  rescale();
+
+  /* ── CSS注入でキャラ/テロップを非表示 ── */
+  const HIDE_CSS = `
+    .character-area { display: none !important; }
+    #telop-bubble,
+    .telop-bubble   { display: none !important; }
+    /* common-telop: data-area を画面下まで拡張 */
+    .slide.common-telop .data-area {
+      bottom: 0 !important;
+    }
+    /* 通常レイアウト: data-area を100%幅に */
+    .content:not(.scrollable) > .data-area {
+      width: 100% !important;
+    }
+    .content.scrollable > .data-area {
+      width: 100% !important;
+    }
+  `;
+
+  function injectStyle(frameEl) {
+    try {
+      const doc = frameEl.contentDocument;
+      if (!doc || !doc.head) return;
+      let el = doc.getElementById('__rv-hide__');
+      if (!el) {
+        el = doc.createElement('style');
+        el.id = '__rv-hide__';
+        doc.head.appendChild(el);
+      }
+      el.textContent = HIDE_CSS;
+    } catch (e) {
+      console.warn('CSS injection failed:', e);
+    }
+  }
+
+  frame.addEventListener('load', () => {
+    rescale();
+    injectStyle(frame);
+  });
+
+  function syncFrame() {
+    const monthId = monthSelect.value || ChaseData.getSelectedMonthId();
+    ChaseData.setSelectedMonthId(monthId);
+    frame.src = `${currentScene}?month=${encodeURIComponent(monthId)}`;
+  }
+
+  function initMonthSelect() {
+    const selected = ChaseData.getSelectedMonthId();
+    ChaseData.MONTHS.forEach((month) => {
+      const option = document.createElement('option');
+      option.value = month.id;
+      option.textContent = month.label;
+      if (month.id === selected) option.selected = true;
+      monthSelect.appendChild(option);
+    });
+    monthSelect.addEventListener('change', syncFrame);
+    syncFrame();
+  }
+
+  /* ── シーン切替 ── */
+  // （シーンは通算リターンのみ）
+
+  initMonthSelect();
+</script>
+</body>
+</html>
