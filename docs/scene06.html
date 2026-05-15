@@ -237,7 +237,7 @@
           investEventsVT.push ({ idx: 0, amount: monthDays[0].vt      });
           allDays.push(...monthDays);
         } else {
-          const investIdx = allDays.length - 1; // last day of prev month = 積立日
+          const investIdx = allDays.length; // 新月データ先頭インデックス（slice(1)後の位置）
           const prevEnd = monthsData[i - 1][monthsData[i - 1].length - 1];
           const thisStart = monthDays[0];
           const levNew = thisStart.levanas - prevEnd.levanas;
