@@ -81,6 +81,27 @@
     }
     .chart-wrap { flex: 1; min-height: 0; }
 
+    .stats-bar {
+      flex-shrink: 0;
+      display: flex;
+      gap: 20px;
+    }
+    .stat-card {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 18px;
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stat-label { font-size: 20px; color: #94a3b8; font-weight: 600; }
+    .stat-value { font-size: 36px; font-weight: 900; color: #e2e8f0; font-family: 'Courier New', monospace; }
+    .stat-value.positive { color: #34d399; }
+    .stat-value.negative { color: #f87171; }
+    .stat-sub { font-size: 16px; color: #64748b; margin-top: 2px; }
+
     canvas { width: 100% !important; height: 100% !important; }
   </style>
 </head>
@@ -98,6 +119,24 @@
       <div class="title">🏁 レバナス vs 楽天VT</div>
       <div class="subtitle" id="subtitle">読み込み中...</div>
     </section>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">📅 初日の差（VT ー レバナス）</div>
+        <div class="stat-value" id="stat-init">…</div>
+        <div class="stat-sub" id="stat-init-sub"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" id="stat-now-label">📍 現在（◯営業日）の差</div>
+        <div class="stat-value" id="stat-now">…</div>
+        <div class="stat-sub" id="stat-now-sub"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" id="stat-pace-label">📈 逆転に必要な年率（時間加重）</div>
+        <div class="stat-value" id="stat-pace">…</div>
+        <div class="stat-sub" id="stat-pace-sub"></div>
+      </div>
+    </div>
 
     <div class="chart-panel">
       <div class="chart-wrap"><canvas id="chart"></canvas></div>
@@ -143,8 +182,87 @@
       return;
     }
 
+    // computeCumulativeTWR と同じ方法で totalDays を計算（各月の length-1 の合計）
+    let totalDays = 0;
+    for (const md of monthsData) { if (md.length) totalDays += md.length - 1; }
+
+    const GOAL_DAYS = 1000;
+    const daysLeft = GOAL_DAYS - totalDays;
+
     document.getElementById('subtitle').textContent =
-      `${meta.label} まで | 通算 ${allDays.length} 営業日`;
+      `${meta.label} まで | 通算 ${totalDays} 営業日`;
+
+    // スタッツ計算
+    const first = allDays[0];
+    const last  = allDays[allDays.length - 1];
+    const initGap = first.vt - first.levanas;
+    const nowGap  = last.vt  - last.levanas;
+
+    const fmt = v => Math.abs(Math.round(v)).toLocaleString('ja-JP');
+    const sign = v => v >= 0 ? '+' : '−';
+
+    // 初日
+    const elInit = document.getElementById('stat-init');
+    elInit.textContent = `${sign(initGap)}${fmt(initGap)} 円`;
+    elInit.className   = 'stat-value ' + (initGap >= 0 ? 'positive' : 'negative');
+    document.getElementById('stat-init-sub').textContent =
+      `VT ${Math.round(first.vt).toLocaleString('ja-JP')} 円  /  レバナス ${Math.round(first.levanas).toLocaleString('ja-JP')} 円`;
+
+    // 現在
+    document.getElementById('stat-now-label').textContent = `📍 現在（第${totalDays}営業日）の差`;
+    const elNow = document.getElementById('stat-now');
+    elNow.textContent = `${sign(nowGap)}${fmt(nowGap)} 円`;
+    elNow.className   = 'stat-value ' + (nowGap >= 0 ? 'negative' : 'positive');
+    document.getElementById('stat-now-sub').textContent =
+      `VT ${Math.round(last.vt).toLocaleString('ja-JP')} 円  /  レバナス ${Math.round(last.levanas).toLocaleString('ja-JP')} 円`;
+
+    // VT 実績年率: computeCumulativeTWR と同一ロジック（月ごとの HPR をチェーン、totalDays で年率化）
+    let twrVT = 1;
+    for (const md of monthsData) {
+      if (md.length >= 2) twrVT *= md[md.length - 1].vt / md[0].vt;
+    }
+    const vtAnnualRate = Math.pow(twrVT, 252 / totalDays) - 1;
+
+    // VT を同じペースで daysLeft 日後まで外挿
+    const vtFuture = last.vt * Math.pow(1 + vtAnnualRate, daysLeft / 252);
+
+    // レバナス DCA: 月1回（約21営業日ごと）10万円積み立て
+    // レバナスが年率 r で運用しつつ DCA を続けた場合の daysLeft 日後の評価額
+    function levanasProjected(annualRate) {
+      const daily = Math.pow(1 + annualRate, 1 / 252);
+      let val = last.levanas * Math.pow(daily, daysLeft);
+      const nInvest = Math.floor(daysLeft / 21);  // 残り投資回数
+      for (let k = 1; k <= nInvest; k++) {
+        const remainDays = daysLeft - k * 21;
+        val += 100000 * Math.pow(daily, remainDays);
+      }
+      return val;
+    }
+
+    // 二分探索で必要年率を求める
+    const elPace = document.getElementById('stat-pace');
+    if (daysLeft <= 0) {
+      elPace.textContent = '期限切れ';
+      elPace.className   = 'stat-value negative';
+      document.getElementById('stat-pace-sub').textContent = `残り ${daysLeft} 営業日`;
+    } else if (nowGap <= 0) {
+      elPace.textContent = '逆転済み！';
+      elPace.className   = 'stat-value positive';
+      document.getElementById('stat-pace-sub').textContent = `残り ${daysLeft} 営業日`;
+    } else {
+      let lo = -0.5, hi = 20.0;
+      for (let i = 0; i < 60; i++) {
+        const mid = (lo + hi) / 2;
+        levanasProjected(mid) < vtFuture ? (lo = mid) : (hi = mid);
+      }
+      const requiredRate = (lo + hi) / 2;
+      const pct = (requiredRate * 100).toFixed(1);
+      const vtPct = (vtAnnualRate * 100).toFixed(1);
+      elPace.textContent = `年 +${pct}%`;
+      elPace.className   = 'stat-value';
+      document.getElementById('stat-pace-sub').textContent =
+        `残り ${daysLeft} 営業日 | VT は実績年率 +${vtPct}% で伸びると仮定・月10万積み立て継続`;
+    }
 
     const labels = allDays.map((d) => {
       const s = String(d.date);
