@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>VT Chase — レース</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="./chase-utils.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f1117;
+      font-family: 'Noto Sans JP', sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .nav {
+      background: #1a1d2e;
+      border-bottom: 2px solid #2e3352;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .nav-title { color: #8899cc; font-size: 13px; font-weight: 600; letter-spacing: .05em; margin-right: 8px; }
+    .nav a {
+      color: #8899cc;
+      font-size: 13px;
+      text-decoration: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid #3a4070;
+      background: #2e3352;
+    }
+    .nav a:hover { background: #3a4480; }
+
+    .frame-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      width: 1920px;
+      height: 1080px;
+      position: absolute;
+      top: 0; left: 0;
+      transform-origin: top left;
+      padding: 40px 48px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: linear-gradient(135deg, #0d1b2a 0%, #1a2a3a 100%);
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .header {
+      background: rgba(255,255,255,0.06);
+      border-radius: 22px;
+      padding: 24px 40px;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .title { font-size: 52px; font-weight: 900; color: #e2e8f0; margin-bottom: 6px; }
+    .subtitle { font-size: 26px; color: #94a3b8; }
+
+    .chart-panel {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border-radius: 24px;
+      padding: 28px 36px 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+    .chart-wrap { flex: 1; min-height: 0; }
+
+    canvas { width: 100% !important; height: 100% !important; }
+  </style>
+</head>
+<body>
+
+<div class="nav">
+  <span class="nav-title">VT Chase</span>
+  <a href="chase.html">📊 通算リターン</a>
+  <a href="chase-race.html" style="background:#3a4480;border-color:#5566aa;color:#fff;">🏁 レース</a>
+</div>
+
+<div class="frame-wrap" id="frame-wrap">
+  <div class="slide" id="slide">
+    <section class="header">
+      <div class="title">🏁 レバナス vs 楽天VT</div>
+      <div class="subtitle" id="subtitle">読み込み中...</div>
+    </section>
+
+    <div class="chart-panel">
+      <div class="chart-wrap"><canvas id="chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const wrap  = document.getElementById('frame-wrap');
+  const slide = document.getElementById('slide');
+
+  function rescale() {
+    const scale = Math.min(wrap.clientWidth / 1920, wrap.clientHeight / 1080);
+    slide.style.transform = `scale(${scale})`;
+    slide.style.left = ((wrap.clientWidth  - 1920 * scale) / 2) + 'px';
+    slide.style.top  = ((wrap.clientHeight - 1080 * scale) / 2) + 'px';
+  }
+  window.addEventListener('resize', rescale);
+  rescale();
+
+  (async function () {
+    const monthId = ChaseData.getSelectedMonthId();
+    const meta = ChaseData.getMonthMeta(monthId);
+
+    // 全月データ読み込み
+    const monthsData = [];
+    for (const month of ChaseData.MONTHS) {
+      const data = await ChaseData.loadMonthData(month.id).catch(() => []);
+      monthsData.push(data);
+      if (month.id === monthId) break;
+    }
+
+    // タイムライン結合（重複除去）
+    const allDays = [];
+    for (let i = 0; i < monthsData.length; i++) {
+      const monthDays = monthsData[i];
+      if (!monthDays.length) continue;
+      allDays.push(...(i === 0 ? monthDays : monthDays.slice(1)));
+    }
+
+    if (!allDays.length) {
+      document.getElementById('subtitle').textContent = 'データを読み込めませんでした';
+      return;
+    }
+
+    document.getElementById('subtitle').textContent =
+      `${meta.label} まで | 通算 ${allDays.length} 営業日`;
+
+    const labels = allDays.map((d) => {
+      const s = String(d.date);
+      return `${s.slice(2,4)}/${s.slice(4,6)}/${s.slice(6,8)}`;
+    });
+
+    new Chart(document.getElementById('chart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: '楽天VT（評価額）',
+            data: allDays.map(d => d.vt),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.08)',
+            borderWidth: 5,
+            pointRadius: 0,
+            tension: 0.2,
+          },
+          {
+            label: 'レバナス（評価額）',
+            data: allDays.map(d => d.levanas),
+            borderColor: '#f43f8e',
+            backgroundColor: 'rgba(244,63,142,0.08)',
+            borderWidth: 5,
+            pointRadius: 0,
+            tension: 0.2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { font: { size: 26, weight: '700' }, color: '#e2e8f0' },
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(10,15,30,0.92)',
+            titleColor: '#ccd6f6',
+            bodyColor: '#e2e8f0',
+            titleFont: { size: 18, weight: '700' },
+            bodyFont: { size: 16 },
+            padding: 14,
+            callbacks: {
+              title(items) {
+                const idx = items[0].dataIndex;
+                const d = allDays[idx];
+                const s = String(d.date);
+                return `${s.slice(0,4)}/${s.slice(4,6)}/${s.slice(6,8)}  (第${idx+1}営業日)`;
+              },
+              label(item) {
+                return `  ${item.dataset.label}: ${Math.round(item.raw).toLocaleString('ja-JP')} 円`;
+              },
+            },
+          },
+        },
+        hover: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            ticks: {
+              font: { size: 18 },
+              color: '#94a3b8',
+              callback: v => Number(v).toLocaleString('ja-JP'),
+            },
+            grid: { color: 'rgba(255,255,255,0.06)' },
+          },
+          x: {
+            ticks: { font: { size: 14 }, color: '#64748b', maxTicksLimit: 20 },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+          },
+        },
+      },
+    });
+  })();
+</script>
+</body>
+</html>

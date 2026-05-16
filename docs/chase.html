@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>VT Chase — データビュー</title>
+  <title>VT Chase — 通算リターン</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="./chase-utils.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -16,7 +17,6 @@
       overflow: hidden;
     }
 
-    /* ── ナビゲーションバー ── */
     .nav {
       background: #1a1d2e;
       border-bottom: 2px solid #2e3352;
@@ -26,7 +26,6 @@
       gap: 8px;
       flex-shrink: 0;
     }
-
     .nav-title {
       color: #8899cc;
       font-size: 13px;
@@ -35,30 +34,6 @@
       margin-right: 8px;
       white-space: nowrap;
     }
-
-    .nav button {
-      background: #2e3352;
-      color: #ccd6f6;
-      border: 1px solid #3a4070;
-      padding: 6px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: inherit;
-      transition: background .15s, border-color .15s;
-      white-space: nowrap;
-    }
-    .nav button:hover {
-      background: #3a4480;
-      border-color: #5566aa;
-    }
-    .nav button.active {
-      background: #4a69bd;
-      border-color: #7799dd;
-      color: #fff;
-      font-weight: 700;
-    }
-
     .nav select {
       background: #2e3352;
       color: #ccd6f6;
@@ -68,132 +43,380 @@
       font-size: 13px;
       font-family: inherit;
     }
-
-    /* キャラ非表示トグル */
-    .toggle-label {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    .nav a {
       color: #8899cc;
-      font-size: 12px;
-      cursor: pointer;
-      user-select: none;
+      font-size: 13px;
+      text-decoration: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid #3a4070;
+      background: #2e3352;
     }
-    .toggle-label input { cursor: pointer; accent-color: #4a69bd; }
+    .nav a:hover { background: #3a4480; }
 
-    /* ── iframe コンテナ ── */
     .frame-wrap {
       flex: 1;
       position: relative;
       overflow: hidden;
     }
 
-    iframe {
+    .slide {
       width: 1920px;
       height: 1080px;
-      border: none;
+      position: absolute;
+      top: 0;
+      left: 0;
       transform-origin: top left;
-      display: block;
+      padding: 40px 48px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: linear-gradient(135deg, #fff7ed 0%, #fde7d1 100%);
+      font-family: 'Noto Sans JP', sans-serif;
     }
+
+    .header {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 22px;
+      padding: 24px 32px;
+      box-shadow: 0 18px 40px rgba(150, 88, 20, 0.12);
+    }
+    .title { font-size: 52px; font-weight: 900; color: #442c14; margin-bottom: 6px; }
+    .subtitle { font-size: 28px; color: #7c5a3a; }
+
+    .panels-container { flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+    .panel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 24px;
+      padding: 22px 30px 16px;
+      box-shadow: 0 18px 44px rgba(109, 67, 16, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+    .panel-top { display: flex; justify-content: space-between; align-items: baseline; flex-shrink: 0; }
+    .panel-title { font-size: 32px; font-weight: 900; color: #4b341d; }
+    .legend { font-size: 20px; color: #7c5a3a; }
+    .chart-wrap { flex: 1; min-height: 0; }
+
+    .return-panel {
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 24px;
+      padding: 20px 40px;
+      box-shadow: 0 18px 44px rgba(109, 67, 16, 0.12);
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      align-items: center;
+    }
+    .return-card {
+      background: linear-gradient(135deg, #f5f3f0 0%, #ede9e4 100%);
+      border-radius: 16px;
+      padding: 18px 32px;
+      text-align: center;
+      min-width: 320px;
+    }
+    .return-label { font-size: 20px; color: #7c5a3a; margin-bottom: 10px; font-weight: 600; }
+    .return-values { display: flex; justify-content: center; gap: 36px; }
+    .return-item { text-align: center; }
+    .return-item-label { font-size: 14px; color: #9d7d5c; margin-bottom: 4px; }
+    .return-item-value { font-size: 30px; font-weight: 900; font-family: 'Courier New', monospace; }
+    .return-item-value.positive { color: #059669; }
+    .return-item-value.negative { color: #dc2626; }
+
+    canvas { width: 100% !important; height: 100% !important; }
   </style>
 </head>
 <body>
 
 <div class="nav">
-  <span class="nav-title">VT Chase — 通算リターン</span>
-
+  <span class="nav-title">VT Chase</span>
+  <a href="chase.html" style="background:#3a4480;border-color:#5566aa;color:#fff;">📊 通算リターン</a>
+  <a href="chase-race.html">🏁 レース</a>
   <select id="month-select" aria-label="対象月"></select>
 </div>
 
 <div class="frame-wrap" id="frame-wrap">
-  <iframe id="scene-frame" src="scene06.html"></iframe>
+  <div class="slide" id="slide">
+    <section class="header">
+      <div class="title">通算リターン</div>
+      <div class="subtitle" id="subtitle">読み込み中...</div>
+    </section>
+
+    <div class="panels-container">
+      <section class="panel">
+        <div class="panel-top">
+          <div class="panel-title">楽天VT の推移（通算）</div>
+          <div class="legend">青: 実績 / 薄青: 期待値（年15%）</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartVT"></canvas></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-top">
+          <div class="panel-title">レバナス の推移（通算）</div>
+          <div class="legend">ピンク: 実績 / 薄ピンク: 期待値（年30%、積立タイミング反映）</div>
+        </div>
+        <div class="chart-wrap"><canvas id="chartLev"></canvas></div>
+      </section>
+
+      <div class="return-panel">
+        <div class="return-card">
+          <div class="return-label">楽天VT — 通算実績年率（時間加重）</div>
+          <div class="return-values">
+            <div class="return-item">
+              <div class="return-item-label">実績年率（TWR）</div>
+              <div class="return-item-value" id="vtActual">-</div>
+            </div>
+            <div class="return-item">
+              <div class="return-item-label">目標（年+15%）</div>
+              <div class="return-item-value" id="vtExpected">+15.0%</div>
+            </div>
+          </div>
+        </div>
+        <div class="return-card">
+          <div class="return-label">レバナス — 通算実績年率（時間加重）</div>
+          <div class="return-values">
+            <div class="return-item">
+              <div class="return-item-label">実績年率（TWR）</div>
+              <div class="return-item-value" id="levanasActual">-</div>
+            </div>
+            <div class="return-item">
+              <div class="return-item-label">目標（年+30%）</div>
+              <div class="return-item-value" id="levanasExpected">+30.0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-  const frame   = document.getElementById('scene-frame');
-  const wrap    = document.getElementById('frame-wrap');
-  const monthSelect = document.getElementById('month-select');
-  const currentScene = 'scene06.html';
-
   /* ── スケーリング ── */
+  const wrap  = document.getElementById('frame-wrap');
+  const slide = document.getElementById('slide');
+
   function rescale() {
     const scaleX = wrap.clientWidth  / 1920;
     const scaleY = wrap.clientHeight / 1080;
     const scale  = Math.min(scaleX, scaleY);
-    frame.style.transform = `scale(${scale})`;
-
-    // センタリング
-    const tx = (wrap.clientWidth  - 1920 * scale) / 2;
-    const ty = (wrap.clientHeight - 1080 * scale) / 2;
-    frame.style.marginLeft = `${tx}px`;
-    frame.style.marginTop  = `${ty}px`;
+    slide.style.transform = `scale(${scale})`;
+    slide.style.left = ((wrap.clientWidth  - 1920 * scale) / 2) + 'px';
+    slide.style.top  = ((wrap.clientHeight - 1080 * scale) / 2) + 'px';
   }
   window.addEventListener('resize', rescale);
   rescale();
 
-  /* ── CSS注入でキャラ/テロップを非表示 ── */
-  const HIDE_CSS = `
-    .character-area { display: none !important; }
-    #telop-bubble,
-    .telop-bubble   { display: none !important; }
-    /* common-telop: data-area を画面下まで拡張 */
-    .slide.common-telop .data-area {
-      bottom: 0 !important;
-    }
-    /* 通常レイアウト: data-area を100%幅に */
-    .content:not(.scrollable) > .data-area {
-      width: 100% !important;
-    }
-    .content.scrollable > .data-area {
-      width: 100% !important;
-    }
-  `;
+  /* ── チャート管理 ── */
+  let chartVT = null, chartLev = null;
 
-  function injectStyle(frameEl) {
-    try {
-      const doc = frameEl.contentDocument;
-      if (!doc || !doc.head) return;
-      let el = doc.getElementById('__rv-hide__');
-      if (!el) {
-        el = doc.createElement('style');
-        el.id = '__rv-hide__';
-        doc.head.appendChild(el);
-      }
-      el.textContent = HIDE_CSS;
-    } catch (e) {
-      console.warn('CSS injection failed:', e);
+  async function render(monthId) {
+    document.getElementById('subtitle').textContent = '計算中...';
+    document.getElementById('vtActual').textContent = '-';
+    document.getElementById('levanasActual').textContent = '-';
+
+    const meta = ChaseData.getMonthMeta(monthId);
+
+    const monthsData = [];
+    for (const month of ChaseData.MONTHS) {
+      const data = await ChaseData.loadMonthData(month.id).catch(() => []);
+      monthsData.push(data);
+      if (month.id === monthId) break;
     }
+
+    const allDays = [];
+    const investEventsLev = [];
+    const investEventsVT  = [];
+
+    for (let i = 0; i < monthsData.length; i++) {
+      const monthDays = monthsData[i];
+      if (!monthDays.length) continue;
+      if (i === 0) {
+        investEventsLev.push({ idx: 0, amount: monthDays[0].levanas });
+        investEventsVT .push({ idx: 0, amount: monthDays[0].vt      });
+        allDays.push(...monthDays);
+      } else {
+        const investIdx = allDays.length;
+        const prevEnd   = monthsData[i - 1][monthsData[i - 1].length - 1];
+        const thisStart = monthDays[0];
+        const levNew = thisStart.levanas - prevEnd.levanas;
+        const vtNew  = thisStart.vt      - prevEnd.vt;
+        if (levNew > 0) investEventsLev.push({ idx: investIdx, amount: levNew });
+        if (vtNew  > 0) investEventsVT .push({ idx: investIdx, amount: vtNew  });
+        allDays.push(...monthDays.slice(1));
+      }
+    }
+
+    if (!allDays.length) {
+      document.getElementById('subtitle').textContent = `${meta.label} | データを読み込めませんでした`;
+      return;
+    }
+
+    document.getElementById('subtitle').textContent =
+      `${meta.label} まで | 通算 ${allDays.length} 営業日`;
+
+    const labels = allDays.map((_, i) => `第${i + 1}日`);
+
+    const expectedVT = allDays.map((_, t) =>
+      allDays[0].vt * Math.pow(1.15, t / 252)
+    );
+    const expectedLev = allDays.map((_, t) =>
+      investEventsLev.reduce((s, ev) =>
+        t >= ev.idx ? s + ev.amount * Math.pow(1.30, (t - ev.idx) / 252) : s, 0)
+    );
+
+    function makeTooltip() {
+      return {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(20,20,40,0.88)',
+        titleColor: '#ccd6f6',
+        bodyColor: '#e2e8f0',
+        titleFont: { size: 18, weight: '700' },
+        bodyFont: { size: 16 },
+        padding: 14,
+        callbacks: {
+          title(items) {
+            const idx = items[0].dataIndex;
+            const d = allDays[idx];
+            const s = String(d.date);
+            return `${s.slice(0,4)}/${s.slice(4,6)}/${s.slice(6,8)}  (第${idx+1}営業日)`;
+          },
+          label(item) {
+            return `  ${item.dataset.label}: ${Math.round(item.raw).toLocaleString('ja-JP')}`;
+          },
+        },
+      };
+    }
+
+    if (chartVT)  { chartVT.destroy();  chartVT  = null; }
+    if (chartLev) { chartLev.destroy(); chartLev = null; }
+
+    chartVT = new Chart(document.getElementById('chartVT'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: '楽天VT 実績',
+            data: allDays.map(d => d.vt),
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.10)',
+            borderWidth: 5,
+            pointRadius: 0,
+            tension: 0.25,
+          },
+          {
+            label: '楽天VT 期待値（年15%）',
+            data: expectedVT,
+            borderColor: '#93c5fd',
+            borderDash: [6, 4],
+            backgroundColor: 'transparent',
+            borderWidth: 3,
+            pointRadius: 0,
+            tension: 0.25,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { font: { size: 22, weight: '700' } } },
+          tooltip: makeTooltip(),
+        },
+        hover: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            min: Math.min(...allDays.map(d => d.vt), ...expectedVT) * 0.97,
+            max: Math.max(...allDays.map(d => d.vt), ...expectedVT) * 1.03,
+            ticks: { font: { size: 18 }, callback: v => Number(v).toLocaleString('ja-JP') },
+          },
+          x: { ticks: { font: { size: 16 }, maxTicksLimit: 20 } },
+        },
+      },
+    });
+
+    chartLev = new Chart(document.getElementById('chartLev'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'レバナス 実績',
+            data: allDays.map(d => d.levanas),
+            borderColor: '#e84393',
+            backgroundColor: 'rgba(232, 67, 147, 0.10)',
+            borderWidth: 5,
+            pointRadius: 0,
+            tension: 0.25,
+          },
+          {
+            label: 'レバナス 期待値（年30%）',
+            data: expectedLev,
+            borderColor: '#f8a1d8',
+            borderDash: [6, 4],
+            backgroundColor: 'transparent',
+            borderWidth: 3,
+            pointRadius: 0,
+            tension: 0.25,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { font: { size: 22, weight: '700' } } },
+          tooltip: makeTooltip(),
+        },
+        hover: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            min: Math.min(...allDays.map(d => d.levanas), ...expectedLev) * 0.97,
+            max: Math.max(...allDays.map(d => d.levanas)) * 1.03,
+            ticks: { font: { size: 18 }, callback: v => Number(v).toLocaleString('ja-JP') },
+          },
+          x: { ticks: { font: { size: 16 }, maxTicksLimit: 20 } },
+        },
+      },
+    });
+
+    const twr = await ChaseData.computeCumulativeTWR(monthId);
+
+    function setTWRCard(id, twrValue) {
+      const el = document.getElementById(id);
+      if (twrValue == null) { el.textContent = 'N/A'; return; }
+      const pct = twrValue * 100;
+      el.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+      el.className = 'return-item-value ' + (pct >= 0 ? 'positive' : 'negative');
+    }
+
+    setTWRCard('vtActual',      twr.vt);
+    setTWRCard('levanasActual', twr.levanas);
   }
 
-  frame.addEventListener('load', () => {
-    rescale();
-    injectStyle(frame);
+  /* ── 月セレクタ初期化 ── */
+  const monthSelect = document.getElementById('month-select');
+  const selected = ChaseData.getSelectedMonthId();
+  ChaseData.MONTHS.forEach((month) => {
+    const option = document.createElement('option');
+    option.value = month.id;
+    option.textContent = month.label;
+    if (month.id === selected) option.selected = true;
+    monthSelect.appendChild(option);
+  });
+  monthSelect.addEventListener('change', () => {
+    ChaseData.setSelectedMonthId(monthSelect.value);
+    render(monthSelect.value);
   });
 
-  function syncFrame() {
-    const monthId = monthSelect.value || ChaseData.getSelectedMonthId();
-    ChaseData.setSelectedMonthId(monthId);
-    frame.src = `${currentScene}?month=${encodeURIComponent(monthId)}`;
-  }
-
-  function initMonthSelect() {
-    const selected = ChaseData.getSelectedMonthId();
-    ChaseData.MONTHS.forEach((month) => {
-      const option = document.createElement('option');
-      option.value = month.id;
-      option.textContent = month.label;
-      if (month.id === selected) option.selected = true;
-      monthSelect.appendChild(option);
-    });
-    monthSelect.addEventListener('change', syncFrame);
-    syncFrame();
-  }
-
-  /* ── シーン切替 ── */
-  // （シーンは通算リターンのみ）
-
-  initMonthSelect();
+  render(selected);
 </script>
 </body>
 </html>
