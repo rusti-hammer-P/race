@@ -248,7 +248,8 @@
         const vtNew  = thisStart.vt      - prevEnd.vt;
         if (levNew > 0) investEventsLev.push({ idx: investIdx, amount: levNew });
         if (vtNew  > 0) investEventsVT .push({ idx: investIdx, amount: vtNew  });
-        allDays.push(...monthDays.slice(1));
+        const sameDate = allDays.length > 0 && monthDays[0].date === allDays[allDays.length - 1].date;
+        allDays.push(...(sameDate ? monthDays.slice(1) : monthDays));
       }
     }
 

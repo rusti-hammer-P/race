@@ -204,21 +204,43 @@
 
   async function computeCumulativeTWR(monthId) {
     // 時間加重収益率（TWR）年率換算
-    // 各月ファイルの HPR（last/first）をチェーン乗算し、累積営業日数で年率換算
+    // VT: DCAなし → 全期間の first→last で単純計算
+    // Levanas: DCAあり → 月ファイル単位の HPR チェーン
     const targetIndex = MONTHS.findIndex((m) => m.id === monthId);
     if (targetIndex < 0) return { vt: null, levanas: null, totalDays: 0 };
 
-    let twrLev = 1, twrVT = 1, totalDays = 0;
+    const monthsData = [];
     for (let i = 0; i <= targetIndex; i++) {
       const d = await loadMonthData(MONTHS[i].id).catch(() => []);
-      if (!d.length) continue;
-      twrLev    *= d[d.length - 1].levanas / d[0].levanas;
-      twrVT     *= d[d.length - 1].vt      / d[0].vt;
-      totalDays += d.length - 1;
+      monthsData.push(d);
     }
 
-    if (totalDays <= 0) return { vt: null, levanas: null, totalDays: 0 };
+    // 日付ベース重複除去で allDays を構築（月境界が重複しない場合も正しく処理）
+    const allDays = [];
+    for (const md of monthsData) {
+      if (!md.length) continue;
+      if (allDays.length === 0) {
+        allDays.push(...md);
+      } else {
+        const skip = md[0].date === allDays[allDays.length - 1].date;
+        allDays.push(...(skip ? md.slice(1) : md));
+      }
+    }
+
+    if (allDays.length < 2) return { vt: null, levanas: null, totalDays: 0 };
+
+    const totalDays = allDays.length - 1;
     const annFactor = 252 / totalDays;
+
+    // VT: DCAなし → allDays の最初と最後だけで計算
+    const twrVT = allDays[allDays.length - 1].vt / allDays[0].vt;
+
+    // Levanas: 月ファイル単位の HPR をチェーン（DCA サブ期間）
+    let twrLev = 1;
+    for (const md of monthsData) {
+      if (md.length >= 2) twrLev *= md[md.length - 1].levanas / md[0].levanas;
+    }
+
     return {
       levanas:   Math.pow(twrLev, annFactor) - 1,
       vt:        Math.pow(twrVT,  annFactor) - 1,

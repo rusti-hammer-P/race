@@ -174,7 +174,12 @@
     for (let i = 0; i < monthsData.length; i++) {
       const monthDays = monthsData[i];
       if (!monthDays.length) continue;
-      allDays.push(...(i === 0 ? monthDays : monthDays.slice(1)));
+      if (i === 0) {
+        allDays.push(...monthDays);
+      } else {
+        const sameDate = allDays.length > 0 && monthDays[0].date === allDays[allDays.length - 1].date;
+        allDays.push(...(sameDate ? monthDays.slice(1) : monthDays));
+      }
     }
 
     if (!allDays.length) {
@@ -182,9 +187,8 @@
       return;
     }
 
-    // computeCumulativeTWR と同じ方法で totalDays を計算（各月の length-1 の合計）
-    let totalDays = 0;
-    for (const md of monthsData) { if (md.length) totalDays += md.length - 1; }
+    // allDays.length - 1 が正しい totalDays（日付ベース重複除去済み）
+    const totalDays = allDays.length - 1;
 
     const GOAL_DAYS = 1000;
     const daysLeft = GOAL_DAYS - totalDays;
@@ -216,12 +220,8 @@
     document.getElementById('stat-now-sub').textContent =
       `VT ${Math.round(last.vt).toLocaleString('ja-JP')} 円  /  レバナス ${Math.round(last.levanas).toLocaleString('ja-JP')} 円`;
 
-    // VT 実績年率: computeCumulativeTWR と同一ロジック（月ごとの HPR をチェーン、totalDays で年率化）
-    let twrVT = 1;
-    for (const md of monthsData) {
-      if (md.length >= 2) twrVT *= md[md.length - 1].vt / md[0].vt;
-    }
-    const vtAnnualRate = Math.pow(twrVT, 252 / totalDays) - 1;
+    // VT 実績年率: DCAなし → allDays の最初と最後の比率を年率化
+    const vtAnnualRate = Math.pow(last.vt / first.vt, 252 / totalDays) - 1;
 
     // VT を同じペースで daysLeft 日後まで外挿
     const vtFuture = last.vt * Math.pow(1 + vtAnnualRate, daysLeft / 252);
