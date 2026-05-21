@@ -187,8 +187,10 @@
       return;
     }
 
-    // allDays.length - 1 が正しい totalDays（日付ベース重複除去済み）
-    const totalDays = allDays.length - 1;
+    // 表示用の通算営業日（第N営業日と一致させる）
+    const totalDays = allDays.length;
+    // 年率化は「初日→最終日」の経過日数を使う
+    const elapsedDays = Math.max(totalDays - 1, 1);
 
     const GOAL_DAYS = 1000;
     const daysLeft = GOAL_DAYS - totalDays;
@@ -221,7 +223,9 @@
       `VT ${Math.round(last.vt).toLocaleString('ja-JP')} 円  /  レバナス ${Math.round(last.levanas).toLocaleString('ja-JP')} 円`;
 
     // VT 実績年率: DCAなし → allDays の最初と最後の比率を年率化
-    const vtAnnualRate = Math.pow(last.vt / first.vt, 252 / totalDays) - 1;
+    const vtAnnualRate = totalDays > 1
+      ? Math.pow(last.vt / first.vt, 252 / elapsedDays) - 1
+      : 0;
 
     // VT を同じペースで daysLeft 日後まで外挿
     const vtFuture = last.vt * Math.pow(1 + vtAnnualRate, daysLeft / 252);
