@@ -60,4 +60,8 @@ const darbyRawData = [
         { "name": "レバナス", "date": "20260529", "price": 954841 },
         { "name": "楽天VT", "date": "20260529", "price": 6073667 },
     ],
+    [
+        { "name": "レバナス", "date": "20260601", "price": 961541 },
+        { "name": "楽天VT", "date": "20260601", "price": 6086484 },
+    ],
 ];
