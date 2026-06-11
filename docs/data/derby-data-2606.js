@@ -48,5 +48,41 @@ derbyRawData = [
         { "name": "SOMPO123",  "date": "20260608", "price": 111920 },
         { "name": "VYM",       "date": "20260608", "price": 111541 },
         { "name": "レバナス",   "date": "20260608", "price": 128530 }
-    ]
+    ],
+    [
+        { "name": "SPYD",      "date": "20260609", "price": 106052 },
+        { "name": "S&P500",    "date": "20260609", "price": 111711 },
+        { "name": "オルカン",   "date": "20260609", "price": 111859 },
+        { "name": "全米株式",   "date": "20260609", "price": 111853 },
+        { "name": "FANG+",     "date": "20260609", "price": 111980 },
+        { "name": "SOX",       "date": "20260609", "price": 171187 },
+        { "name": "ABB",       "date": "20260609", "price": 105774 },
+        { "name": "SOMPO123",  "date": "20260609", "price": 112182 },
+        { "name": "VYM",       "date": "20260609", "price": 111415 },
+        { "name": "レバナス",   "date": "20260609", "price": 132236 }
+    ],
+    [
+        { "name": "SPYD",      "date": "20260610", "price": 108027 },
+        { "name": "S&P500",    "date": "20260610", "price": 111516 },
+        { "name": "オルカン",   "date": "20260610", "price": 111974 },
+        { "name": "全米株式",   "date": "20260610", "price": 111725 },
+        { "name": "FANG+",     "date": "20260610", "price": 110585 },
+        { "name": "SOX",       "date": "20260610", "price": 167982 },
+        { "name": "ABB",       "date": "20260610", "price": 106192 },
+        { "name": "SOMPO123",  "date": "20260610",  "price": 111910 },
+        { "name": "VYM",       "date": "20260610", "price": 112015 },
+        { "name": "レバナス",   "date": "20260610", "price": 129381 }
+    ],
+    [
+        { "name": "SPYD",      "date": "20260611", "price": 107670 },
+        { "name": "S&P500",    "date": "20260611", "price": 109823 },
+        { "name": "オルカン",   "date": "20260611", "price": 110520 },
+        { "name": "全米株式",   "date": "20260611", "price": 110035 },
+        { "name": "FANG+",     "date": "20260611", "price": 107888 },
+        { "name": "SOX",       "date": "20260611", "price": 162167 },
+        { "name": "ABB",       "date": "20260611", "price": 104321 },
+        { "name": "SOMPO123",  "date": "20260611", "price": 110671 },
+        { "name": "VYM",       "date": "20260611", "price": 110981 },
+        { "name": "レバナス",   "date": "20260611", "price": 124599 }
+    ]   
 ];
