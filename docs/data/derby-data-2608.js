@@ -1,4 +1,4 @@
-// derby October sample data
+// derby August data
 
 derbyRawData = [
     [
@@ -228,5 +228,17 @@ derbyRawData = [
         { "name": "SOMPO123",  "date": "20260901", "price": 137019 },
         { "name": "VYM",       "date": "20260901", "price": 135935 },
         { "name": "レバナス",   "date": "20260901", "price": 148801 }
+    ],
+    [
+        { "name": "SPYD",      "date": "20260902", "price": 133466 },
+        { "name": "S&P500",    "date": "20260902", "price": 135514 },
+        { "name": "オルカン",   "date": "20260902", "price": 136433 },
+        { "name": "全米株式",   "date": "20260902", "price": 135568 },
+        { "name": "FANG+",     "date": "20260902", "price": 141190},
+        { "name": "SOX",       "date": "20260902", "price": 168037 },
+        { "name": "ABB",       "date": "20260902", "price": 127345 },
+        { "name": "SOMPO123",  "date": "20260902", "price": 136706 },
+        { "name": "VYM",       "date": "20260902", "price": 135887 },
+        { "name": "レバナス",   "date": "20260902", "price": 145350 }
     ]
 ];
