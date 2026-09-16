@@ -96,8 +96,8 @@ derbyRawData = [
         { "name": "SOMPO123", "date": "20260914", "price": 140697 },
         { "name": "VYM", "date": "20260914", "price": 139573 },
         { "name": "レバナス", "date": "20260914", "price": 151913 }
-    ]
-        [
+    ],
+    [
             { "name": "SPYD",      "date": "20260915", "price": 135869 },
             { "name": "S&P500",    "date": "20260915", "price": 140336 },
             { "name": "オルカン",   "date": "20260915", "price": 140803 },
@@ -108,5 +108,17 @@ derbyRawData = [
             { "name": "SOMPO123",  "date": "20260915", "price": 140950 },
             { "name": "VYM",       "date": "20260915", "price": 139487 },
             { "name": "レバナス",   "date": "20260915", "price": 150524 }
+        ],
+        [
+            { "name": "SPYD",      "date": "20260916", "price": 136001 },
+            { "name": "S&P500",    "date": "20260916", "price": 140374 },
+            { "name": "オルカン",   "date": "20260916", "price": 140716 },
+            { "name": "全米株式",   "date": "20260916", "price": 140306 },
+            { "name": "FANG+",     "date": "20260916", "price": 146243 },
+            { "name": "SOX",       "date": "20260916", "price": 170980 },
+            { "name": "ABB",       "date": "20260916", "price": 131531 },
+            { "name": "SOMPO123",  "date": "20260916", "price": 140932 },
+            { "name": "VYM",       "date": "20260916", "price": 139886 },
+            { "name": "レバナス",   "date": "20260916", "price": 149188 }
         ]
 ];
