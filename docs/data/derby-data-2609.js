@@ -157,4 +157,16 @@ derbyRawData = [
             { "name": "VYM",       "date": "20260924", "price": 139596 },
             { "name": "レバナス",   "date": "20260924", "price": 167435 }
         ]
+        ,[
+            { "name": "SPYD",      "date": "20260925", "price": 135662 },
+            { "name": "S&P500",    "date": "20260925", "price": 145674 },
+            { "name": "オルカン",   "date": "20260925", "price": 145527 },
+            { "name": "全米株式",   "date": "20260925", "price": 145407 },
+            { "name": "FANG+",     "date": "20260925", "price": 156014 },
+            { "name": "SOX",       "date": "20260925", "price": 195257 },
+            { "name": "ABB",       "date": "20260925", "price": 137761 },
+            { "name": "SOMPO123",  "date": "20260925", "price": 144146 },
+            { "name": "VYM",       "date": "20260925", "price": 139619 },
+            { "name": "レバナス",   "date": "20260925", "price": 168284 }
+        ]
 ];
