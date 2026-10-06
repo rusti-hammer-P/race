@@ -15,7 +15,8 @@
         { id: '2606', candidates: ['data/derby-data-2606.js'] },
         { id: '2607', candidates: ['data/derby-data-2607.js'] },
         { id: '2608', candidates: ['data/derby-data-2608.js'] },
-        { id: '2609', candidates: ['data/derby-data-2609.js'] }
+        { id: '2609', candidates: ['data/derby-data-2609.js'] },
+        { id: '2610', candidates: ['data/derby-data-2610.js'] }
         
     ];
     const arcBoundaries = [];
