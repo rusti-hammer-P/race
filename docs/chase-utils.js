@@ -12,6 +12,7 @@
     { id: "2608", label: "2026年8月", file: "data/chase-data-2608.js" },
     { id: "2609", label: "2026年9月", file: "data/chase-data-2609.js" },
     { id: "2610", label: "2026年10月", file: "data/chase-data-2610.js" },
+    { id: "2611", label: "2026年11月", file: "data/chase-data-2611.js" },
   ];
 
   const cache = new Map();
